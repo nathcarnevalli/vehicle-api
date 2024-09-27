@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace ApiVeiculos.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("Api/[controller]")]
 
 public class VeiculosController : ControllerBase
 {
@@ -29,17 +29,30 @@ public class VeiculosController : ControllerBase
         return Ok(veiculos); 
     }
 
+    [HttpGet("Disponiveis")]
+    public ActionResult<IEnumerable<Veiculo>> GetVeiculosDisponiveis()
+    {
+        var veiculos = _uof.VeiculoRepository.GetVeiculosDisponiveis();
+
+        if (veiculos is null)
+        {
+            return BadRequest("Houve um erro...");
+        }
+
+        return Ok(veiculos);
+    }
+
     [HttpGet("{id:int:min(1)}", Name = "ObterVeiculo")]
     public ActionResult<Veiculo> Get(int id)
     {
         var veiculo = _uof.VeiculoRepository.Get(v => v.VeiculoId == id);
 
-        if(veiculo is null)
+        if (veiculo is null)
         {
             return NotFound($"Veículo com id = {id} não encontrado");
         }
 
-        return Ok(veiculo); 
+        return Ok(veiculo);
     }
 
     [HttpPost]
@@ -78,7 +91,7 @@ public class VeiculosController : ControllerBase
         return Ok(veiculo);
     }
 
-    [HttpDelete("{id:int:min(1)}")] /*Persistência de dados*/
+    [HttpDelete("{id:int:min(1)}")] /* Persistência de dados */
     public ActionResult<Veiculo> Delete(int id)
     {
         var existeVeiculo = _uof.VeiculoRepository.Get(v => v.VeiculoId == id);
@@ -94,7 +107,7 @@ public class VeiculosController : ControllerBase
 
         existeVeiculo.Estado = (Veiculo.EstadoVeiculo) 2;
 
-        var veiculoDeletado = _uof.VeiculoRepository.Delete(existeVeiculo, id);
+        var veiculoDeletado = _uof.VeiculoRepository.Delete(existeVeiculo);
         _uof.Commit();
 
         return Ok(veiculoDeletado);

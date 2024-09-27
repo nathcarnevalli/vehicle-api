@@ -5,7 +5,7 @@ using System.Linq.Expressions;
 namespace ApiVeiculos.Repositories;
 public class Repository<T> : IRepository<T> where T : class
 {
-    private AppDbContext _context;
+    protected AppDbContext _context;
 
     public Repository(AppDbContext context)
     {
@@ -35,7 +35,5 @@ public class Repository<T> : IRepository<T> where T : class
         _context.Set<T>().Update(entity);
         return entity;
     }
-
-    
 }
 
