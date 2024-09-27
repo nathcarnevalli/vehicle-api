@@ -23,7 +23,7 @@ public class VeiculosController : ControllerBase
 
         if(veiculos is null)
         {
-            return BadRequest("Houve um erro..."); 
+            return NoContent();
         }
 
         return Ok(veiculos); 
@@ -36,7 +36,7 @@ public class VeiculosController : ControllerBase
 
         if (veiculos is null)
         {
-            return BadRequest("Houve um erro...");
+            return NoContent();
         }
 
         return Ok(veiculos);
