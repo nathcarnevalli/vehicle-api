@@ -32,9 +32,8 @@ public class Veiculo
     {
         Disponivel,
         Manutencao,
-        Indisponivel
+        Indisponivel /* Esse estado serve para caso se queira "deletar" um veículo */
     }
-    [JsonIgnore]
     public ICollection<Reserva>? Reservas { get; set; }
 
 }

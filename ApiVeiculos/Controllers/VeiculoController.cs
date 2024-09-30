@@ -1,6 +1,7 @@
 ﻿using ApiVeiculos.Models;
 using ApiVeiculos.Repositories;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace ApiVeiculos.Controllers;
 
@@ -30,9 +31,15 @@ public class VeiculosController : ControllerBase
     }
 
     [HttpGet("Disponiveis")]
-    public ActionResult<IEnumerable<Veiculo>> GetVeiculosDisponiveis()
+    public ActionResult<IEnumerable<Veiculo>> GetVeiculosDisponiveis([BindRequired][FromQuery] string dataInicio, [BindRequired][FromQuery] string dataFim)
     {
-        var veiculos = _uof.VeiculoRepository.GetVeiculosDisponiveis();
+
+        if(DateTime.Parse(dataInicio) >= DateTime.Parse(dataFim))
+        {
+            return BadRequest("Datas inválidas");
+        }
+
+        var veiculos = _uof.VeiculoRepository.GetVeiculosDisponiveis(dataInicio, dataFim);
 
         if (veiculos is null)
         {

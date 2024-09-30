@@ -4,6 +4,6 @@ namespace ApiVeiculos.Repositories;
 
 public interface IVeiculoRepository : IRepository<Veiculo>
 {
-    IQueryable<Veiculo> GetVeiculosDisponiveis();
+    IQueryable<Veiculo> GetVeiculosDisponiveis(string dataInicio, string dataFim);
 }
 
