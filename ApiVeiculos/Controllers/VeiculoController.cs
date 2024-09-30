@@ -2,6 +2,7 @@
 using ApiVeiculos.Repositories;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.EntityFrameworkCore;
 
 namespace ApiVeiculos.Controllers;
 
@@ -33,13 +34,12 @@ public class VeiculosController : ControllerBase
     [HttpGet("Disponiveis")]
     public ActionResult<IEnumerable<Veiculo>> GetVeiculosDisponiveis([BindRequired][FromQuery] string dataInicio, [BindRequired][FromQuery] string dataFim)
     {
-
-        if(DateTime.Parse(dataInicio) >= DateTime.Parse(dataFim))
+        if (DateTime.Parse(dataInicio) >= DateTime.Parse(dataFim) || DateTime.Parse(dataInicio) <= DateTime.Now || (DateTime.Parse(dataFim) - DateTime.Parse(dataInicio)).TotalHours < 1)
         {
-            return BadRequest("Datas inválidas");
+            return BadRequest("Datas inválidas, selecione um intervalo de pelo menos uma hora");
         }
 
-        var veiculos = _uof.VeiculoRepository.GetVeiculosDisponiveis(dataInicio, dataFim);
+        var veiculos = _uof.VeiculoRepository.GetVeiculosDisponiveis(dataInicio, dataFim).AsNoTracking().ToList();
 
         if (veiculos is null)
         {
@@ -49,6 +49,7 @@ public class VeiculosController : ControllerBase
         return Ok(veiculos);
     }
 
+    /* Talvez transformar em um IQueryble*/
     [HttpGet("{id:int:min(1)}", Name = "ObterVeiculo")]
     public ActionResult<Veiculo> Get(int id)
     {
@@ -92,13 +93,19 @@ public class VeiculosController : ControllerBase
             return BadRequest("Houve um erro...");
         }
 
+        if(veiculo.Estado == Veiculo.EstadoVeiculo.Manutencao)
+        {
+            /* Todas as reservas desse veículo devem ser canceladas --> criar uma função pra retornar todas as reservas de um veículo */
+            /* Cada reserva é cancelada */
+        }
+
         var veiculoAtualizado = _uof.VeiculoRepository.Update(veiculo);
         _uof.Commit();
 
         return Ok(veiculo);
     }
 
-    [HttpDelete("{id:int:min(1)}")] /* Persistência de dados */
+    [HttpDelete("{id:int:min(1)}")] 
     public ActionResult<Veiculo> Delete(int id)
     {
         var existeVeiculo = _uof.VeiculoRepository.Get(v => v.VeiculoId == id);
@@ -112,7 +119,10 @@ public class VeiculosController : ControllerBase
             return BadRequest("Houve um erro...");
         }
 
-        existeVeiculo.Estado = (Veiculo.EstadoVeiculo) 2;
+        /* Todas as reservas desse veículo devem ser canceladas --> criar uma rota pra retornar todas as reservas de um veículo */
+        /* Cada reserva é cancelada */
+
+        existeVeiculo.Estado = (Veiculo.EstadoVeiculo) 2; //Indisponível
 
         var veiculoDeletado = _uof.VeiculoRepository.Delete(existeVeiculo);
         _uof.Commit();
