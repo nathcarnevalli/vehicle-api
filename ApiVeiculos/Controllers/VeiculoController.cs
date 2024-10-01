@@ -1,7 +1,6 @@
 ﻿using ApiVeiculos.Models;
 using ApiVeiculos.Repositories;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
 
 namespace ApiVeiculos.Controllers;
@@ -32,11 +31,11 @@ public class VeiculosController : ControllerBase
     }
 
     [HttpGet("Disponiveis")]
-    public ActionResult<IEnumerable<Veiculo>> GetVeiculosDisponiveis([BindRequired][FromQuery] string dataInicio, [BindRequired][FromQuery] string dataFim)
+    public ActionResult<IEnumerable<Veiculo>> GetVeiculosDisponiveis(DateTime dataInicio, DateTime dataFim)
     {
-        if (DateTime.Parse(dataInicio) >= DateTime.Parse(dataFim) || DateTime.Parse(dataInicio) <= DateTime.Now || (DateTime.Parse(dataFim) - DateTime.Parse(dataInicio)).TotalHours < 1)
+        if (dataInicio >= dataFim)
         {
-            return BadRequest("Datas inválidas, selecione um intervalo de pelo menos uma hora");
+            return BadRequest("Datas inválidas");
         }
 
         var veiculos = _uof.VeiculoRepository.GetVeiculosDisponiveis(dataInicio, dataFim).AsNoTracking().ToList();
@@ -49,7 +48,6 @@ public class VeiculosController : ControllerBase
         return Ok(veiculos);
     }
 
-    /* Talvez transformar em um IQueryble*/
     [HttpGet("{id:int:min(1)}", Name = "ObterVeiculo")]
     public ActionResult<Veiculo> Get(int id)
     {
@@ -64,7 +62,7 @@ public class VeiculosController : ControllerBase
     }
 
     [HttpPost]
-    public ActionResult<Veiculo> Post([FromBody] Veiculo veiculo)
+    public ActionResult<Veiculo> Post(Veiculo veiculo)
     {
         var existeVeiculo = _uof.VeiculoRepository.Get(v => v.Placa == veiculo.Placa);
 
@@ -80,7 +78,7 @@ public class VeiculosController : ControllerBase
     }
 
     [HttpPut("{id:int:min(1)}")]
-    public ActionResult<Veiculo> Put([FromBody] Veiculo veiculo, int id) 
+    public ActionResult<Veiculo> Put(Veiculo veiculo, int id) 
     {
         var existeVeiculo = _uof.VeiculoRepository.Get(v => v.VeiculoId == id);
 
@@ -93,10 +91,21 @@ public class VeiculosController : ControllerBase
             return BadRequest("Houve um erro...");
         }
 
-        if(veiculo.Estado == Veiculo.EstadoVeiculo.Manutencao)
+        var estadoVeiculo = veiculo.Estado.Equals(Veiculo.EstadoVeiculo.Manutencao);
+
+        if (veiculo.Estado.Equals(Veiculo.EstadoVeiculo.Manutencao))
         {
-            /* Todas as reservas desse veículo devem ser canceladas --> criar uma função pra retornar todas as reservas de um veículo */
-            /* Cada reserva é cancelada */
+            var reservas = _uof.ReservaRepository.GetReservasVeiculo(id);
+
+            foreach (var reserva in reservas!)
+            {
+                if (reserva.Estado.Equals(Reserva.EstadoReserva.Provisorio) || reserva.Estado.Equals(Reserva.EstadoReserva.Confirmado))
+                {
+                    reserva.Estado = Reserva.EstadoReserva.Cancelado;
+                    _uof.ReservaRepository.Update(reserva);
+                    _uof.Commit();
+                }
+            }
         }
 
         var veiculoAtualizado = _uof.VeiculoRepository.Update(veiculo);
@@ -119,8 +128,17 @@ public class VeiculosController : ControllerBase
             return BadRequest("Houve um erro...");
         }
 
-        /* Todas as reservas desse veículo devem ser canceladas --> criar uma rota pra retornar todas as reservas de um veículo */
-        /* Cada reserva é cancelada */
+        var reservas = _uof.ReservaRepository.GetReservasVeiculo(id);
+
+        foreach (var reserva in reservas!)
+        {
+            if (reserva.Estado.Equals(Reserva.EstadoReserva.Provisorio) || reserva.Estado.Equals(Reserva.EstadoReserva.Confirmado))
+            {
+                reserva.Estado = Reserva.EstadoReserva.Cancelado;
+                _uof.ReservaRepository.Update(reserva);
+                _uof.Commit();
+            }
+        }
 
         existeVeiculo.Estado = (Veiculo.EstadoVeiculo) 2; //Indisponível
 

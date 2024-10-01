@@ -1,6 +1,9 @@
-﻿namespace ApiVeiculos.Repositories
+﻿using ApiVeiculos.Models;
+
+namespace ApiVeiculos.Repositories
 {
-    public interface IReservaRepository<T>
+    public interface IReservaRepository : IRepository<Reserva>
     {
+        public IEnumerable<Reserva>? GetReservasVeiculo(int id);
     }
 }

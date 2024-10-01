@@ -10,18 +10,12 @@ public class VeiculoRepository : Repository<Veiculo>, IVeiculoRepository
 {
     public VeiculoRepository(AppDbContext context) : base(context) { }
 
-    public IQueryable<Veiculo> GetVeiculosDisponiveis(string dataInicio, string dataFim)
+    public IQueryable<Veiculo> GetVeiculosDisponiveis(DateTime dataInicio, DateTime dataFim)
     {
-        DateTime inicio = DateTime.Parse(dataInicio);
-        DateTime fim = DateTime.Parse(dataFim);
-
-        /* Ainda não verifica se uma reserva entre esse intervalo foi cancelada, se foi significa que o veículo está disponível */
-
         return _context.Veiculos
             .Include(v => v.Reservas)
-            .Where(v => v.Estado != EstadoVeiculo.Manutencao || v.Estado != EstadoVeiculo.Indisponivel)
-            .Where(v => v.Reservas.Any(r =>
-                (r.DataInicio > inicio && r.DataInicio > fim) || (r.DataFim < inicio && r.DataFim < fim)) || v.Reservas.Count == 0);
+            .Where(v => v.Estado.Equals(EstadoVeiculo.Disponivel) && (!v.Reservas.Any(r =>
+                r.DataInicio < dataInicio && r.DataFim < dataFim) || v.Reservas.Count == 0 || v.Reservas.All(r => r.Estado.Equals(EstadoReserva.Cancelado))));
     }
 
 }

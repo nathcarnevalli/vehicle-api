@@ -41,33 +41,31 @@ public class ReservasController : ControllerBase
     }
 
     [HttpPost]
-    public ActionResult<Reserva> Post([FromBody] Reserva reserva)
+    public ActionResult<Reserva> Post(Reserva reserva)
     {
-        var formato = "yyyy/MM/dd HH:mm:ss";
 
-        if (reserva.DataInicio >= reserva.DataFim || (reserva.DataFim - reserva.DataInicio).TotalHours < 1 || reserva.DataInicio <= DateTime.Now)
+        if (reserva.DataInicio >= reserva.DataFim ||  reserva.DataInicio <= DateTime.Now)
         {
-            return BadRequest("Datas inválidas, selecione um intervalo de pelo menos uma hora.");
+            return BadRequest("Datas inválidas");
         }
 
-        var veiculoDisponivel = _uof.VeiculoRepository.GetVeiculosDisponiveis(reserva.DataInicio.ToString(formato), reserva.DataFim.ToString(formato)).FirstOrDefault(v => v.VeiculoId == reserva.VeiculoId);
+        var veiculoDisponivel = _uof.VeiculoRepository.GetVeiculosDisponiveis(reserva.DataInicio, reserva.DataFim).FirstOrDefault(v => v.VeiculoId == reserva.VeiculoId);
 
         if (veiculoDisponivel is null)
         {
             return Conflict($"O veiculo de id = {reserva.VeiculoId} não se encontra disponível");
         }
 
-        var reservaCriada = _uof.ReservaRepository.Create(reserva); /* Provisório - Confirmada - Cancelada */
+        var reservaCriada = _uof.ReservaRepository.Create(reserva);
         _uof.Commit();
 
         return new CreatedAtRouteResult("ObterReserva", new { id = reservaCriada.ReservaId }, reservaCriada);
     }
 
+    /* Alterar uma reserva */
     [HttpPut("{id:int:min(1)}")]
-    public ActionResult<Reserva> Put([FromBody] Reserva reserva, int id)
+    public ActionResult<Reserva> Put(Reserva reserva, int id)
     {
-        var formato = "yyyy/MM/dd HH:mm:ss";
-
         var reservaExiste = _uof.ReservaRepository.Get(r => r.ReservaId == id);
 
         if(reservaExiste is null)
@@ -80,27 +78,36 @@ public class ReservasController : ControllerBase
         }
 
         /* Lógica da data de inicio - alterada ou não */
-        /* Alterada significa que o usuário deseja alterar o inicio portanto a referência deve ser a data de hoje */
+        /* Alterada significa que o usuário deseja alterar a data de inicio e a final */
         /* Data final alterada - significa que o usuário deseja adicionar mais dias a reserva */
 
-        if (reserva.DataInicio >= reserva.DataFim || (reserva.DataFim - reserva.DataInicio).TotalHours < 1)
+        if (reserva.DataInicio >= reserva.DataFim)
         {
-            return BadRequest("Datas inválidas, selecione um intervalo de pelo menos uma hora");
+            return BadRequest("Datas inválidas");
         }
 
-        var veiculoDisponivel = _uof.VeiculoRepository.GetVeiculosDisponiveis(reserva.DataInicio.ToString(formato), reserva.DataFim.ToString(formato)).FirstOrDefault(v => v.VeiculoId == reserva.VeiculoId);
+        if(reserva.DataInicio != reservaExiste.DataInicio)
+        {
+            if(reserva.DataInicio <= DateTime.Now)
+            {
+                return BadRequest("Datas inválidas");
+            }
+        }
+
+        var veiculoDisponivel = _uof.VeiculoRepository.GetVeiculosDisponiveis(reserva.DataInicio, reserva.DataFim).FirstOrDefault(v => v.VeiculoId == reserva.VeiculoId);
 
         if (veiculoDisponivel is null)
         {
             return Conflict($"O veiculo de id = {reserva.VeiculoId} não se encontra disponível nesse intervalo");
         }
 
-        var reservaCriada = _uof.ReservaRepository.Update(reserva); /* Provisório - Confirmada - Cancelada */
+        var reservaAtualizada = _uof.ReservaRepository.Update(reserva); 
         _uof.Commit();
 
-        return Ok(reservaCriada);
+        return Ok(reservaAtualizada);
     }
 
+    /* Cancelar uma reserva */
     [HttpDelete("{id:int:min(1)}")]
     public ActionResult<Reserva> Delete(int id)
     {
