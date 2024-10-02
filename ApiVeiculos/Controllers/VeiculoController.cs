@@ -22,7 +22,7 @@ public class VeiculosController : ControllerBase
     {
         var veiculos = _uof.VeiculoRepository.GetAll();
 
-        if(veiculos is null)
+        if(!veiculos.Any())
         {
             return NoContent();
         }
@@ -40,12 +40,25 @@ public class VeiculosController : ControllerBase
 
         var veiculos = _uof.VeiculoRepository.GetVeiculosDisponiveis(dataInicio, dataFim).AsNoTracking().ToList();
 
-        if (veiculos is null)
+        if (veiculos.Count == 0)
         {
             return NoContent();
         }
 
         return Ok(veiculos);
+    }
+
+    [HttpGet("{id:int:min(1)}/Reservas")]
+    public ActionResult<IEnumerable<Reserva>> GetReservas(int id)
+    {
+        var reservas = _uof.ReservaRepository.GetReservasVeiculo(id);
+
+        if (!reservas.Any())
+        {
+            return NoContent();
+        }
+
+        return Ok(reservas);
     }
 
     [HttpGet("{id:int:min(1)}", Name = "ObterVeiculo")]
@@ -86,12 +99,6 @@ public class VeiculosController : ControllerBase
         {
             return NotFound($"Veículo de id = {id} não existe");
         }
-        else if(veiculo.VeiculoId != id)
-        {
-            return BadRequest("Houve um erro...");
-        }
-
-        var estadoVeiculo = veiculo.Estado.Equals(Veiculo.EstadoVeiculo.Manutencao);
 
         if (veiculo.Estado.Equals(Veiculo.EstadoVeiculo.Manutencao))
         {
@@ -102,8 +109,7 @@ public class VeiculosController : ControllerBase
                 if (reserva.Estado.Equals(Reserva.EstadoReserva.Provisorio) || reserva.Estado.Equals(Reserva.EstadoReserva.Confirmado))
                 {
                     reserva.Estado = Reserva.EstadoReserva.Cancelado;
-                    _uof.ReservaRepository.Update(reserva);
-                    _uof.Commit();
+                    _uof.ReservaRepository.Delete(reserva);
                 }
             }
         }
@@ -123,10 +129,6 @@ public class VeiculosController : ControllerBase
         {
             return NotFound($"Veículo de id = {id} não existe");
         }
-        else if (existeVeiculo.VeiculoId != id)
-        {
-            return BadRequest("Houve um erro...");
-        }
 
         var reservas = _uof.ReservaRepository.GetReservasVeiculo(id);
 
@@ -135,8 +137,7 @@ public class VeiculosController : ControllerBase
             if (reserva.Estado.Equals(Reserva.EstadoReserva.Provisorio) || reserva.Estado.Equals(Reserva.EstadoReserva.Confirmado))
             {
                 reserva.Estado = Reserva.EstadoReserva.Cancelado;
-                _uof.ReservaRepository.Update(reserva);
-                _uof.Commit();
+                _uof.ReservaRepository.Delete(reserva);
             }
         }
 

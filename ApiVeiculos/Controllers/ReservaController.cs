@@ -19,7 +19,7 @@ public class ReservasController : ControllerBase
     {
         var reservas = _uof.ReservaRepository.GetAll();
 
-        if (reservas is null)
+        if (!reservas.Any())
         {
             return NoContent();
         }
@@ -64,41 +64,49 @@ public class ReservasController : ControllerBase
 
     /* Alterar uma reserva */
     [HttpPut("{id:int:min(1)}")]
-    public ActionResult<Reserva> Put(Reserva reserva, int id)
+    public ActionResult<Reserva> Put([FromBody] Reserva reserva, int id)
     {
-        var reservaExiste = _uof.ReservaRepository.Get(r => r.ReservaId == id);
+        var existeReserva = _uof.ReservaRepository.Get(r => r.ReservaId == id);
 
-        if(reservaExiste is null)
+        if (existeReserva is null)
         {
             return NotFound($"Reserva de id = {id} não existe");
         }
-        else if (id != reserva.ReservaId)
+        else if (id != existeReserva.ReservaId)
         {
             return BadRequest("Houve um erro...");
         }
-
-        /* Lógica da data de inicio - alterada ou não */
-        /* Alterada significa que o usuário deseja alterar a data de inicio e a final */
-        /* Data final alterada - significa que o usuário deseja adicionar mais dias a reserva */
 
         if (reserva.DataInicio >= reserva.DataFim)
         {
             return BadRequest("Datas inválidas");
         }
 
-        if(reserva.DataInicio != reservaExiste.DataInicio)
+        /* Alteração de data */
+        if (reserva.DataInicio != existeReserva.DataInicio || reserva.DataFim != existeReserva.DataFim)
         {
-            if(reserva.DataInicio <= DateTime.Now)
+            if (reserva.DataInicio <= DateTime.Now)
             {
                 return BadRequest("Datas inválidas");
             }
+
+            var veiculoDisponivel = _uof.VeiculoRepository.GetVeiculosDisponiveis(reserva.DataInicio, reserva.DataFim).FirstOrDefault(v => v.VeiculoId == reserva.VeiculoId);
+
+            if (veiculoDisponivel is null)
+            {
+                return Conflict($"O veiculo de id = {reserva.VeiculoId} não se encontra disponível nesse intervalo");
+            }
         }
-
-        var veiculoDisponivel = _uof.VeiculoRepository.GetVeiculosDisponiveis(reserva.DataInicio, reserva.DataFim).FirstOrDefault(v => v.VeiculoId == reserva.VeiculoId);
-
-        if (veiculoDisponivel is null)
+        else
         {
-            return Conflict($"O veiculo de id = {reserva.VeiculoId} não se encontra disponível nesse intervalo");
+            var reservaEmAndamento = _uof.ReservaRepository.GetReservasVeiculo(id)?.FirstOrDefault(r =>
+    r.Estado == Reserva.EstadoReserva.Confirmado || r.Estado == Reserva.EstadoReserva.Provisorio);
+
+            if(reservaEmAndamento is not null)
+            {
+                return Conflict($"O veiculo de id = {reserva.VeiculoId} já possui uma reserva em andamento");
+            }
+
         }
 
         var reservaAtualizada = _uof.ReservaRepository.Update(reserva); 

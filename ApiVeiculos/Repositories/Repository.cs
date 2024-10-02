@@ -7,7 +7,7 @@ public class Repository<T> : IRepository<T> where T : class
 {
     protected AppDbContext _context;
 
-    public Repository(AppDbContext context)
+    public Repository(AppDbContext context) 
     {
         _context = context;
     }

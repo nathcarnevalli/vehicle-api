@@ -10,8 +10,7 @@ public class ReservaRepository : Repository<Reserva>, IReservaRepository
     public IEnumerable<Reserva>? GetReservasVeiculo(int id)
     {
         return _context.Veiculos
-            .Where(v => v.VeiculoId == id)
-            .Include(v => v.Reservas).FirstOrDefault(v => v.VeiculoId == id)?.Reservas;
+            .Include(v => v.Reservas).AsNoTracking().FirstOrDefault(v => v.VeiculoId == id)?.Reservas?.ToList();
     }
 }
 

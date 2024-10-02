@@ -14,8 +14,9 @@ public class VeiculoRepository : Repository<Veiculo>, IVeiculoRepository
     {
         return _context.Veiculos
             .Include(v => v.Reservas)
+            .AsNoTracking()
             .Where(v => v.Estado.Equals(EstadoVeiculo.Disponivel) && (!v.Reservas.Any(r =>
-                r.DataInicio < dataInicio && r.DataFim < dataFim) || v.Reservas.Count == 0 || v.Reservas.All(r => r.Estado.Equals(EstadoReserva.Cancelado))));
+                r.DataInicio <= dataInicio && r.DataFim >= dataFim) || v.Reservas.Count == 0 || v.Reservas.All(r => r.Estado.Equals(EstadoReserva.Cancelado))));
     }
 
 }
