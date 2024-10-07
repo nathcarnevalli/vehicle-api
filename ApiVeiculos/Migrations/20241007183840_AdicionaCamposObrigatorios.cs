@@ -1,40 +1,39 @@
-﻿using System;
-using Microsoft.EntityFrameworkCore.Migrations;
+﻿using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
 namespace ApiVeiculos.Migrations
 {
     /// <inheritdoc />
-    public partial class AjustesUser : Migration
+    public partial class AdicionaCamposObrigatorios : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AddColumn<string>(
-                name: "RefreshToken",
+                name: "CPF",
                 table: "AspNetUsers",
                 type: "longtext",
                 nullable: true)
                 .Annotation("MySql:CharSet", "utf8mb4");
 
-            migrationBuilder.AddColumn<DateTime>(
-                name: "RefreshTokenExpiryTime",
+            migrationBuilder.AddColumn<string>(
+                name: "Name",
                 table: "AspNetUsers",
-                type: "datetime(6)",
-                nullable: false,
-                defaultValue: new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified));
+                type: "longtext",
+                nullable: true)
+                .Annotation("MySql:CharSet", "utf8mb4");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropColumn(
-                name: "RefreshToken",
+                name: "CPF",
                 table: "AspNetUsers");
 
             migrationBuilder.DropColumn(
-                name: "RefreshTokenExpiryTime",
+                name: "Name",
                 table: "AspNetUsers");
         }
     }

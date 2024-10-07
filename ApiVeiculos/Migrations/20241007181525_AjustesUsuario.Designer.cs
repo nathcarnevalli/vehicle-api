@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ApiVeiculos.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20241007143116_AjustesUser")]
-    partial class AjustesUser
+    [Migration("20241007181525_AjustesUsuario")]
+    partial class AjustesUsuario
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
