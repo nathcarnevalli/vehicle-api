@@ -5,7 +5,7 @@ namespace ApiVeiculos.DTOs;
 public class RegisterModel
 {
     [Required(ErrorMessage = "Username é obrigatório")]
-    public string? UserName { get; set; }
+    public string? Username { get; set; }
 
     [EmailAddress]
     [Required(ErrorMessage = "Email é obrigatório")]

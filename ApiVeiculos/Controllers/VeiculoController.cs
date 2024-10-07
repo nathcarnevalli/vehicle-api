@@ -1,12 +1,13 @@
 ﻿using ApiVeiculos.Models;
 using ApiVeiculos.Repositories;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace ApiVeiculos.Controllers;
 
 [ApiController]
-[Route("Api/[controller]")]
+[Route("[controller]")]
 
 public class VeiculosController : ControllerBase
 {
@@ -18,6 +19,7 @@ public class VeiculosController : ControllerBase
     }
 
     [HttpGet]
+    [Authorize]
     public ActionResult<IEnumerable<Veiculo>> Get()
     {
         var veiculos = _uof.VeiculoRepository.GetAll();
@@ -31,6 +33,7 @@ public class VeiculosController : ControllerBase
     }
 
     [HttpGet("Disponiveis")]
+    [Authorize]
     public ActionResult<IEnumerable<Veiculo>> GetVeiculosDisponiveis(DateTime dataInicio, DateTime dataFim)
     {
         if (dataInicio >= dataFim)
@@ -49,6 +52,7 @@ public class VeiculosController : ControllerBase
     }
 
     [HttpGet("{id:int:min(1)}/Reservas")]
+    [Authorize]
     public ActionResult<IEnumerable<Reserva>> GetReservas(int id)
     {
         var reservas = _uof.ReservaRepository.GetReservasVeiculo(id);

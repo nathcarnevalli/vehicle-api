@@ -1,10 +1,11 @@
 ﻿using ApiVeiculos.Models;
 using ApiVeiculos.Repositories;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 namespace ApiVeiculos.Controllers;
 
 [ApiController]
-[Route("Api/[controller]")]
+[Route("[controller]")]
 public class ReservasController : ControllerBase
 {
     private readonly IUnitOfWork _uof;
@@ -15,6 +16,7 @@ public class ReservasController : ControllerBase
     }
 
     [HttpGet]
+    [Authorize]
     public ActionResult<IEnumerable<Reserva>> Get()
     {
         var reservas = _uof.ReservaRepository.GetAll();
@@ -28,6 +30,7 @@ public class ReservasController : ControllerBase
     }
 
     [HttpGet("{id:int:min(1)}", Name = "ObterReserva")]
+    [Authorize]
     public ActionResult<Reserva> Get(int id)
     {
         var reserva = _uof.ReservaRepository.Get(r => r.ReservaId == id);
@@ -41,6 +44,7 @@ public class ReservasController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize]
     public ActionResult<Reserva> Post(Reserva reserva)
     {
 
@@ -64,6 +68,7 @@ public class ReservasController : ControllerBase
 
     /* Alterar uma reserva */
     [HttpPut("{id:int:min(1)}")]
+    [Authorize]
     public ActionResult<Reserva> Put([FromBody] Reserva reserva, int id)
     {
         var existeReserva = _uof.ReservaRepository.Get(r => r.ReservaId == id);
@@ -117,6 +122,7 @@ public class ReservasController : ControllerBase
 
     /* Cancelar uma reserva */
     [HttpDelete("{id:int:min(1)}")]
+    [Authorize]
     public ActionResult<Reserva> Delete(int id)
     {
         var existeReserva = _uof.ReservaRepository.Get(r => r.ReservaId == id);
