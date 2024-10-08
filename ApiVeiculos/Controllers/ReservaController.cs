@@ -26,7 +26,7 @@ public class ReservasController : ControllerBase
             return NoContent();
         }
 
-        return Ok(reservas);
+        return Ok(new { Status = "200", Data = reservas });
     }
 
     [HttpGet("{id:int:min(1)}", Name = "ObterReserva")]
@@ -37,10 +37,10 @@ public class ReservasController : ControllerBase
 
         if (reserva is null)
         {
-            return NotFound($"Reserva com id = {id} não encontrado");
+            return NotFound( new { Status = "404", Message = "Reserva não encontrado" });
         }
 
-        return Ok(reserva);
+        return Ok(new { Status = "200", Data = reserva });
     }
 
     [HttpPost]
@@ -50,20 +50,20 @@ public class ReservasController : ControllerBase
 
         if (reserva.DataInicio >= reserva.DataFim ||  reserva.DataInicio <= DateTime.Now)
         {
-            return BadRequest("Datas inválidas");
+            return BadRequest(new { Status = "400", Message = "Datas inválidas" });
         }
 
         var veiculoDisponivel = _uof.VeiculoRepository.GetVeiculosDisponiveis(reserva.DataInicio, reserva.DataFim).FirstOrDefault(v => v.VeiculoId == reserva.VeiculoId);
 
         if (veiculoDisponivel is null)
         {
-            return Conflict($"O veiculo de id = {reserva.VeiculoId} não se encontra disponível");
+            return Conflict(new { Status = "409", Message = "Veiculo não se encontra disponível nesse intervalo" });
         }
 
         var reservaCriada = _uof.ReservaRepository.Create(reserva);
         _uof.Commit();
 
-        return new CreatedAtRouteResult("ObterReserva", new { id = reservaCriada.ReservaId }, reservaCriada);
+        return new CreatedAtRouteResult("ObterReserva", new { Status = "201", Data = reservaCriada, Message = "Reserva criada com sucesso" });
     }
 
     /* Alterar uma reserva */
@@ -75,16 +75,12 @@ public class ReservasController : ControllerBase
 
         if (existeReserva is null)
         {
-            return NotFound($"Reserva de id = {id} não existe");
-        }
-        else if (id != existeReserva.ReservaId)
-        {
-            return BadRequest("Houve um erro...");
+            return NotFound( new { Status = "404", Message = "Reserva não encontrada"});
         }
 
         if (reserva.DataInicio >= reserva.DataFim)
         {
-            return BadRequest("Datas inválidas");
+            return BadRequest(new { Status = "400", Message = "Datas inválidas" });
         }
 
         /* Alteração de data */
@@ -92,14 +88,14 @@ public class ReservasController : ControllerBase
         {
             if (reserva.DataInicio <= DateTime.Now)
             {
-                return BadRequest("Datas inválidas");
+                return BadRequest(new { Status = "400", Message = "Datas inválidas" });
             }
 
             var veiculoDisponivel = _uof.VeiculoRepository.GetVeiculosDisponiveis(reserva.DataInicio, reserva.DataFim).FirstOrDefault(v => v.VeiculoId == reserva.VeiculoId);
 
             if (veiculoDisponivel is null)
             {
-                return Conflict($"O veiculo de id = {reserva.VeiculoId} não se encontra disponível nesse intervalo");
+                return Conflict(new {Status = "409", Message = "Veículo não se encontra disponível nesse intervalo" });
             }
         }
         else
@@ -109,7 +105,7 @@ public class ReservasController : ControllerBase
 
             if(reservaEmAndamento is not null)
             {
-                return Conflict($"O veiculo de id = {reserva.VeiculoId} já possui uma reserva em andamento");
+                return Conflict(new {Status = "409", Message = "Veículo já possui uma reserva em andamento" });
             }
 
         }
@@ -117,7 +113,7 @@ public class ReservasController : ControllerBase
         var reservaAtualizada = _uof.ReservaRepository.Update(reserva); 
         _uof.Commit();
 
-        return Ok(reservaAtualizada);
+        return Ok(new { Status = "200", Data = reservaAtualizada, Message = "Reserva atualizada com sucesso"});
     }
 
     /* Cancelar uma reserva */
@@ -129,11 +125,10 @@ public class ReservasController : ControllerBase
 
         if (existeReserva is null)
         {
-            return NotFound($"Reserva de id = {id} não existe");
-        }
-        else if (existeReserva.ReservaId != id)
+            return NotFound(new { Status = "404", Message = "Reserva não encontrada" });
+        }else if (existeReserva.Estado.Equals(Reserva.EstadoReserva.Cancelado))
         {
-            return BadRequest("Houve um erro...");
+            return BadRequest(new { Status = "400", Message = "Reserva já foi deletada" });
         }
 
         existeReserva.Estado = (Reserva.EstadoReserva) 2;
@@ -141,7 +136,7 @@ public class ReservasController : ControllerBase
         var reservaCancelada = _uof.ReservaRepository.Delete(existeReserva);
         _uof.Commit();
 
-        return Ok(reservaCancelada);
+        return Ok(new { Status = "200", Data = reservaCancelada, Message = "Reserva deletada com sucesso" });
     }
 }
 
