@@ -3,5 +3,5 @@
 namespace ApiVeiculos.Repositories;
 public interface IReservaRepository : IRepository<Reserva>
 {
-    public IEnumerable<Reserva>? GetReservasVeiculo(int id);
+    public Task<IEnumerable<Reserva>>? GetReservasVeiculoAsync(int id);
 }

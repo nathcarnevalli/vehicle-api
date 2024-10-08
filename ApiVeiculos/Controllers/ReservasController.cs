@@ -17,9 +17,9 @@ public class ReservasController : ControllerBase
 
     [HttpGet]
     [Authorize(Policy = "GerenteOnly")]
-    public ActionResult<IEnumerable<Reserva>> Get()
+    public async Task<ActionResult<IEnumerable<Reserva>>> Get()
     {
-        var reservas = _uof.ReservaRepository.GetAll();
+        var reservas = await _uof.ReservaRepository.GetAllAsync();
 
         if (!reservas.Any())
         {
@@ -31,9 +31,9 @@ public class ReservasController : ControllerBase
 
     [HttpGet("{id:int:min(1)}", Name = "ObterReserva")]
     [Authorize(Policy = "GerenteOnly")]
-    public ActionResult<Reserva> Get(int id)
+    public async Task<ActionResult<Reserva>> Get(int id)
     {
-        var reserva = _uof.ReservaRepository.Get(r => r.ReservaId == id);
+        var reserva = await _uof.ReservaRepository.GetAsync(r => r.ReservaId == id);
 
         if (reserva is null)
         {
@@ -45,7 +45,7 @@ public class ReservasController : ControllerBase
 
     [HttpPost]
     [Authorize(Policy = "AllRoles")]
-    public ActionResult<Reserva> Post(Reserva reserva)
+    public async Task<ActionResult<Reserva>> Post(Reserva reserva)
     {
 
         if (reserva.DataInicio >= reserva.DataFim ||  reserva.DataInicio <= DateTime.Now)
@@ -53,7 +53,8 @@ public class ReservasController : ControllerBase
             return BadRequest(new { Status = "400", Message = "Datas inválidas" });
         }
 
-        var veiculoDisponivel = _uof.VeiculoRepository.GetVeiculosDisponiveis(reserva.DataInicio, reserva.DataFim).FirstOrDefault(v => v.VeiculoId == reserva.VeiculoId);
+        var veiculosDisponiveis = await _uof.VeiculoRepository.GetVeiculosDisponiveisAsync(reserva.DataInicio, reserva.DataFim);
+        var veiculoDisponivel = veiculosDisponiveis.FirstOrDefault(v => v.VeiculoId == reserva.VeiculoId);
 
         if (veiculoDisponivel is null)
         {
@@ -61,7 +62,7 @@ public class ReservasController : ControllerBase
         }
 
         var reservaCriada = _uof.ReservaRepository.Create(reserva);
-        _uof.Commit();
+        await _uof.CommitAsync();
 
         return new CreatedAtRouteResult("ObterReserva", new { Status = "201", Data = reservaCriada, Message = "Reserva criada com sucesso" });
     }
@@ -69,9 +70,9 @@ public class ReservasController : ControllerBase
     /* Alterar uma reserva */
     [HttpPut("{id:int:min(1)}")]
     [Authorize(Policy = "FuncionarioOrGerenteOnly")]
-    public ActionResult<Reserva> Put([FromBody] Reserva reserva, int id)
+    public async Task<ActionResult<Reserva>> Put([FromBody] Reserva reserva, int id)
     {
-        var existeReserva = _uof.ReservaRepository.Get(r => r.ReservaId == id);
+        var existeReserva = await _uof.ReservaRepository.GetAsync(r => r.ReservaId == id);
 
         if (existeReserva is null)
         {
@@ -91,7 +92,9 @@ public class ReservasController : ControllerBase
                 return BadRequest(new { Status = "400", Message = "Datas inválidas" });
             }
 
-            var veiculoDisponivel = _uof.VeiculoRepository.GetVeiculosDisponiveis(reserva.DataInicio, reserva.DataFim).FirstOrDefault(v => v.VeiculoId == reserva.VeiculoId);
+            var veiculosDisponiveis = await _uof.VeiculoRepository.GetVeiculosDisponiveisAsync(reserva.DataInicio, reserva.DataFim);
+
+            var veiculoDisponivel = veiculosDisponiveis.FirstOrDefault(v => v.VeiculoId == reserva.VeiculoId);
 
             if (veiculoDisponivel is null)
             {
@@ -100,7 +103,8 @@ public class ReservasController : ControllerBase
         }
         else
         {
-            var reservaEmAndamento = _uof.ReservaRepository.GetReservasVeiculo(id)?.FirstOrDefault(r =>
+            var reservas = await _uof.ReservaRepository.GetReservasVeiculoAsync(id)!;
+            var reservaEmAndamento = reservas.FirstOrDefault(r =>
     r.Estado == Reserva.EstadoReserva.Confirmado || r.Estado == Reserva.EstadoReserva.Provisorio);
 
             if(reservaEmAndamento is not null)
@@ -111,7 +115,7 @@ public class ReservasController : ControllerBase
         }
 
         var reservaAtualizada = _uof.ReservaRepository.Update(reserva); 
-        _uof.Commit();
+        await _uof.CommitAsync();
 
         return Ok(new { Status = "200", Data = reservaAtualizada, Message = "Reserva atualizada com sucesso"});
     }
@@ -119,9 +123,9 @@ public class ReservasController : ControllerBase
     /* Cancelar uma reserva */
     [HttpDelete("{id:int:min(1)}")]
     [Authorize(Policy = "GerenteOnly")]
-    public ActionResult<Reserva> Delete(int id)
+    public async Task<ActionResult<Reserva>> Delete(int id)
     {
-        var existeReserva = _uof.ReservaRepository.Get(r => r.ReservaId == id);
+        var existeReserva = await _uof.ReservaRepository.GetAsync(r => r.ReservaId == id);
 
         if (existeReserva is null)
         {
@@ -131,10 +135,10 @@ public class ReservasController : ControllerBase
             return BadRequest(new { Status = "400", Message = "Reserva já foi deletada" });
         }
 
-        existeReserva.Estado = (Reserva.EstadoReserva) 2;
+        existeReserva.Estado = Reserva.EstadoReserva.Cancelado;
 
         var reservaCancelada = _uof.ReservaRepository.Delete(existeReserva);
-        _uof.Commit();
+        await _uof.CommitAsync();
 
         return Ok(new { Status = "200", Data = reservaCancelada, Message = "Reserva deletada com sucesso" });
     }

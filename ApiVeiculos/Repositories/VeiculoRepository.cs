@@ -10,13 +10,14 @@ public class VeiculoRepository : Repository<Veiculo>, IVeiculoRepository
 {
     public VeiculoRepository(AppDbContext context) : base(context) { }
 
-    public IQueryable<Veiculo> GetVeiculosDisponiveis(DateTime dataInicio, DateTime dataFim)
+    public async Task<IQueryable<Veiculo>> GetVeiculosDisponiveisAsync(DateTime dataInicio, DateTime dataFim)
     {
-        return _context.Veiculos
+        var veiculos = await _context.Veiculos
             .Include(v => v.Reservas)
-            .AsNoTracking()
-            .Where(v => v.Estado.Equals(EstadoVeiculo.Disponivel) && (!v.Reservas.Any(r =>
-                r.DataInicio <= dataInicio && r.DataFim >= dataFim) || v.Reservas.Count == 0 || v.Reservas.All(r => r.Estado.Equals(EstadoReserva.Cancelado))));
+            .AsNoTracking().Where(v => v.Estado.Equals(EstadoVeiculo.Disponivel) && (!v.Reservas.Any(r =>
+                r.DataInicio <= dataInicio && r.DataFim >= dataFim) || v.Reservas.Count == 0 || v.Reservas.All(r => r.Estado.Equals(EstadoReserva.Cancelado)))).ToListAsync();
+
+        return veiculos.AsQueryable();
     }
 
 }

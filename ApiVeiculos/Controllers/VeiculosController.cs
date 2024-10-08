@@ -2,7 +2,6 @@
 using ApiVeiculos.Repositories;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace ApiVeiculos.Controllers;
 
@@ -20,9 +19,9 @@ public class VeiculosController : ControllerBase
 
     [HttpGet]
     [Authorize(Policy = "GerenteOnly")]
-    public ActionResult<IEnumerable<Veiculo>> Get()
+    public async Task<ActionResult<IEnumerable<Veiculo>>> Get()
     {
-        var veiculos = _uof.VeiculoRepository.GetAll();
+        var veiculos = await _uof.VeiculoRepository.GetAllAsync();
 
         if(!veiculos.Any())
         {
@@ -34,16 +33,16 @@ public class VeiculosController : ControllerBase
 
     [HttpGet("Disponiveis")]
     [Authorize(Policy = "AllRoles")]
-    public ActionResult<IEnumerable<Veiculo>> GetVeiculosDisponiveis(DateTime dataInicio, DateTime dataFim)
+    public async Task<ActionResult<IEnumerable<Veiculo>>> GetVeiculosDisponiveis(DateTime dataInicio, DateTime dataFim)
     {
         if (dataInicio >= dataFim)
         {
             return BadRequest(new { Status = "400", Message = "Datas inválidas" });
         }
 
-        var veiculos = _uof.VeiculoRepository.GetVeiculosDisponiveis(dataInicio, dataFim).AsNoTracking().ToList();
+        var veiculos = await _uof.VeiculoRepository.GetVeiculosDisponiveisAsync(dataInicio, dataFim);
 
-        if (veiculos.Count == 0)
+        if (!veiculos.Any())
         {
             return NoContent();
         }
@@ -53,9 +52,9 @@ public class VeiculosController : ControllerBase
 
     [HttpGet("{id:int:min(1)}/Reservas")]
     [Authorize(Policy = "GerenteOnly")]
-    public ActionResult<IEnumerable<Reserva>> GetReservas(int id)
+    public async Task<ActionResult<IEnumerable<Reserva>>> GetReservas(int id)
     {
-        var reservas = _uof.ReservaRepository.GetReservasVeiculo(id);
+        var reservas = await _uof.ReservaRepository.GetReservasVeiculoAsync(id)!;
 
         if (!reservas.Any())
         {
@@ -67,9 +66,9 @@ public class VeiculosController : ControllerBase
 
     [HttpGet("{id:int:min(1)}", Name = "ObterVeiculo")]
     [Authorize(Policy = "GerenteOnly")]
-    public ActionResult<Veiculo> Get(int id)
+    public async Task<ActionResult<Veiculo>> Get(int id)
     {
-        var veiculo = _uof.VeiculoRepository.Get(v => v.VeiculoId == id);
+        var veiculo = await _uof.VeiculoRepository.GetAsync(v => v.VeiculoId == id);
 
         if (veiculo is null)
         {
@@ -81,9 +80,9 @@ public class VeiculosController : ControllerBase
 
     [HttpPost]
     [Authorize(Policy = "FuncionarioOrGerenteOnly")]
-    public ActionResult<Veiculo> Post(Veiculo veiculo)
+    public async Task<ActionResult<Veiculo>> Post(Veiculo veiculo)
     {
-        var existeVeiculo = _uof.VeiculoRepository.Get(v => v.Placa == veiculo.Placa);
+        var existeVeiculo = await _uof.VeiculoRepository.GetAsync(v => v.Placa == veiculo.Placa);
 
         if(existeVeiculo is not null)
         {
@@ -91,16 +90,16 @@ public class VeiculosController : ControllerBase
         }
 
         var veiculoCriado = _uof.VeiculoRepository.Create(veiculo);
-        _uof.Commit();
+        await _uof.CommitAsync();
 
         return new CreatedAtRouteResult("ObterVeiculo", new { Status = "201", Data = veiculoCriado, Message = "Veículo criado com sucesso" }); 
     }
 
     [HttpPut("{id:int:min(1)}")]
     [Authorize(Policy = "GerenteOnly")]
-    public ActionResult<Veiculo> Put(Veiculo veiculo, int id) 
+    public async Task<ActionResult<Veiculo>> Put(Veiculo veiculo, int id) 
     {
-        var existeVeiculo = _uof.VeiculoRepository.Get(v => v.VeiculoId == id);
+        var existeVeiculo = await _uof.VeiculoRepository.GetAsync(v => v.VeiculoId == id);
 
         if(existeVeiculo is null)
         {
@@ -109,7 +108,7 @@ public class VeiculosController : ControllerBase
 
         if (veiculo.Estado.Equals(Veiculo.EstadoVeiculo.Manutencao))
         {
-            var reservas = _uof.ReservaRepository.GetReservasVeiculo(id);
+            var reservas = await _uof.ReservaRepository.GetReservasVeiculoAsync(id)!;
 
             foreach (var reserva in reservas!)
             {
@@ -122,16 +121,16 @@ public class VeiculosController : ControllerBase
         }
 
         var veiculoAtualizado = _uof.VeiculoRepository.Update(veiculo);
-        _uof.Commit();
+        await _uof.CommitAsync();
 
         return Ok(new { Status = "200", Data = veiculo, Message = "Veículo atualizado com sucesso" });
     }
 
     [HttpDelete("{id:int:min(1)}")]
     [Authorize(Policy = "GerenteOnly")]
-    public ActionResult<Veiculo> Delete(int id)
+    public async Task<ActionResult<Veiculo>> Delete(int id)
     {
-        var existeVeiculo = _uof.VeiculoRepository.Get(v => v.VeiculoId == id);
+        var existeVeiculo = await _uof.VeiculoRepository.GetAsync(v => v.VeiculoId == id);
 
         if(existeVeiculo is null)
         {
@@ -141,7 +140,7 @@ public class VeiculosController : ControllerBase
             return BadRequest(new { Status = "404", Message = $"Veículo {existeVeiculo.Modelo} já foi deletado"});
         }
 
-        var reservas = _uof.ReservaRepository.GetReservasVeiculo(id);
+        var reservas = await _uof.ReservaRepository.GetReservasVeiculoAsync(id)!;
 
         foreach (var reserva in reservas!)
         {
@@ -152,10 +151,10 @@ public class VeiculosController : ControllerBase
             }
         }
 
-        existeVeiculo.Estado = (Veiculo.EstadoVeiculo) 2; //Indisponível
+        existeVeiculo.Estado = (Veiculo.EstadoVeiculo) 2; 
 
         var veiculoDeletado = _uof.VeiculoRepository.Delete(existeVeiculo);
-        _uof.Commit();
+        await _uof.CommitAsync();
 
         return Ok(new { Status = "200", Data = veiculoDeletado, Message = $"Veículo {existeVeiculo.Modelo} deletado com sucesso" });
     }

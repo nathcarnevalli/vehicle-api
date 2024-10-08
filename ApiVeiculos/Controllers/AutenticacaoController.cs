@@ -46,7 +46,6 @@ public class AutenticacaoController : Controller
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
             };
 
-            /* Adiciona a Claim do tipo de Role */
             foreach (var userRole in userRoles)
             {
                 authClaims.Add(new Claim(ClaimTypes.Role, userRole));
@@ -65,7 +64,13 @@ public class AutenticacaoController : Controller
 
             user.RefreshToken = refreshToken;
 
-            await _userManager.UpdateAsync(user);
+            var resultado = await _userManager.UpdateAsync(user);
+
+            if (!resultado.Succeeded)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new { Status = "500", Message = "Houve um erro..." });
+            }
 
             return Ok(new
             {

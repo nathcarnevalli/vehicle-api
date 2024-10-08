@@ -7,10 +7,12 @@ public class ReservaRepository : Repository<Reserva>, IReservaRepository
 {
     public ReservaRepository(AppDbContext context) : base(context) { }
 
-    public IEnumerable<Reserva>? GetReservasVeiculo(int id)
+    public async Task<IEnumerable<Reserva>>? GetReservasVeiculoAsync(int id)
     {
-        return _context.Veiculos
-            .Include(v => v.Reservas).AsNoTracking().FirstOrDefault(v => v.VeiculoId == id)?.Reservas?.ToList();
+        var veiculos = await _context.Veiculos
+            .Include(v => v.Reservas).AsNoTracking().FirstOrDefaultAsync(v => v.VeiculoId == id);
+
+        return veiculos.Reservas.ToList();
     }
 }
 

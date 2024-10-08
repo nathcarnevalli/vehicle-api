@@ -6,7 +6,7 @@
 
         public IReservaRepository ReservaRepository { get; }
 
-        void Commit();
+        Task CommitAsync();
 
     }
 }

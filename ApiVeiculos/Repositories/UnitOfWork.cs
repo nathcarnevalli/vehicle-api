@@ -23,14 +23,14 @@ namespace ApiVeiculos.Repositories
             get { return _reservaRepository = _reservaRepository ?? new ReservaRepository(_context); } 
         }
 
-        public void Commit()
+        public async Task CommitAsync()
         {
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
         }
 
-        public void Dispose() 
+        public async Task Dispose() 
         {
-            _context.Dispose();
+            await _context.DisposeAsync();
         }
     }
 }

@@ -31,7 +31,7 @@ public class UsuariosController : Controller
         return Ok(new { Status = "200", Data = usuarios });
     }
 
-    [HttpGet("{id:alpha}")]
+    [HttpGet("{id:alpha}", Name = "ObterUsuario")]
     //[Authorize(Policy = "FuncionarioOrGerenteOnly")]
     public async Task<IActionResult> Get(string id)
     {
@@ -45,6 +45,7 @@ public class UsuariosController : Controller
         return Ok(new { Status = "200", Data = usuario });
     }
 
+    /* Atualizar um usuário */
     [HttpPost]
     public async Task<IActionResult> Post(RegisterModel register)
     {
@@ -73,13 +74,13 @@ public class UsuariosController : Controller
                    new { Status = "500", Message = "Houve um erro na criação de usuário" });
         }
 
-        /*Alterar pra retornar um 201*/
-        return Ok(new { Status = "200", Message = "Usuário criado com sucesso!" });
+        return new CreatedAtRouteResult("ObterUsuario", new { Status = "200", Message = "Usuário criado com sucesso!" });
 
     }
 
-    /*[HttpPut("{id:alpha}")]
-    [Authorize(Policy = "GerenteOnly")]
+    /* Alterar um usuário */
+    [HttpPut("{id:alpha}")]
+    //[Authorize(Policy = "GerenteOnly")]
     public async Task<IActionResult> Put(string id, UserModel usuario)
     {
         var existeUsuario = await _userManager.FindByIdAsync(id);
@@ -98,8 +99,9 @@ public class UsuariosController : Controller
         var usuarioAtualizado = await _userManager.UpdateAsync(existeUsuario);
 
         return Ok(new { Status = "200", Data = usuarioAtualizado, Message = "Informações atualizadas com sucesso" });
-    }*/
+    }
 
+    /* Deletar um usuário */
     [HttpDelete("{id:alpha}")]
     //[Authorize(Policy = "GerenteOnly")]
     public async Task<IActionResult> Delete(string id)
