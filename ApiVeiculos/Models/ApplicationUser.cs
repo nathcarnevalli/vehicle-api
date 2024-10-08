@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
 
-namespace APICatalogo.Models;
+namespace ApiVeiculos.Models;
 
 public class ApplicationUser : IdentityUser
 {
@@ -8,4 +8,12 @@ public class ApplicationUser : IdentityUser
     public DateTime RefreshTokenExpiryTime { get; set; }
     public string? Name { get; set; }
     public string? CPF {  get; set; }
+
+    public EstadoUsuario Estado { get; set; }
+
+    public enum EstadoUsuario
+    {
+        Ativo,
+        Inativo
+    }
 }

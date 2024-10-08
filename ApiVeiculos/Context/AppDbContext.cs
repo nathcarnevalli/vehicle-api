@@ -1,5 +1,4 @@
-﻿using APICatalogo.Models;
-using ApiVeiculos.Models;
+﻿using ApiVeiculos.Models;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 

@@ -1,5 +1,5 @@
-﻿using APICatalogo.Models;
-using ApiVeiculos.DTOs;
+﻿using ApiVeiculos.DTOs;
+using ApiVeiculos.Models;
 using ApiVeiculos.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -77,39 +77,6 @@ public class AutenticacaoController : Controller
             });
         }
         return Unauthorized(new { Status = "401", Message = "Username ou senha incorretos" });
-    }
-
-    [HttpPost("Cadastro")]
-    public async Task<IActionResult> Register([FromBody] RegisterModel register)
-    {
-        var existeUsuario = await _userManager.FindByNameAsync(register.Username!);
-
-        if (existeUsuario?.CPF == register.CPF || register.Email == existeUsuario?.Email)
-        {
-            return BadRequest(new { Status = "400", Message = "O usuário já está cadastrado" });
-        }
-
-        ApplicationUser user = new()
-        {
-            Email = register.Email,
-            SecurityStamp = Guid.NewGuid().ToString(),
-            UserName = register.Username,
-            CPF = register.CPF,
-            Name = register.Nome
-        };
-
-        await _userManager.CreateAsync(user, register.Password!);
-        var resultado = await _userManager.AddToRoleAsync(user, "Cliente");
-
-        if (!resultado.Succeeded)
-        {
-            return StatusCode(StatusCodes.Status500InternalServerError,
-                   new { Status = "500", Message = "Houve um erro na criação de usuário" });
-        }
-
-        /*Alterar pra retornar um 201*/
-        return Ok( new { Status = "200", Message = "Usuário criado com sucesso!" });
-
     }
 
     [HttpPost("Perfil")]

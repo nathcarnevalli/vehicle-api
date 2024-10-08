@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ApiVeiculos.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20241007183840_AdicionaCamposObrigatorios")]
-    partial class AdicionaCamposObrigatorios
+    [Migration("20241008173638_AdicionaEstadoUsuario")]
+    partial class AdicionaEstadoUsuario
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

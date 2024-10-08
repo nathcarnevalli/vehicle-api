@@ -1,6 +1,6 @@
-using APICatalogo.Models;
 using ApiVeiculos.Context;
 using ApiVeiculos.Extensions;
+using ApiVeiculos.Models;
 using ApiVeiculos.Repositories;
 using ApiVeiculos.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -21,7 +21,7 @@ builder.Services.AddControllers().AddJsonOptions(options =>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "apicatalogo", Version = "v1" });
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Api de gerenciamento de veículos e reservas", Version = "v1" });
 
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()
     {

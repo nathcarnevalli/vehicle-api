@@ -25,7 +25,7 @@ namespace ApiVeiculos.Migrations
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
 
-            modelBuilder.Entity("APICatalogo.Models.ApplicationUser", b =>
+            modelBuilder.Entity("ApiVeiculo.Models.ApplicationUser", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("varchar(255)");
@@ -312,7 +312,7 @@ namespace ApiVeiculos.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
                 {
-                    b.HasOne("APICatalogo.Models.ApplicationUser", null)
+                    b.HasOne("ApiVeiculo.Models.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -321,7 +321,7 @@ namespace ApiVeiculos.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
-                    b.HasOne("APICatalogo.Models.ApplicationUser", null)
+                    b.HasOne("ApiVeiculo.Models.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -336,7 +336,7 @@ namespace ApiVeiculos.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("APICatalogo.Models.ApplicationUser", null)
+                    b.HasOne("ApiVeiculo.Models.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -345,7 +345,7 @@ namespace ApiVeiculos.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
                 {
-                    b.HasOne("APICatalogo.Models.ApplicationUser", null)
+                    b.HasOne("ApiVeiculo.Models.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
