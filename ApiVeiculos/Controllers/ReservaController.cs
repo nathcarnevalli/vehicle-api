@@ -16,7 +16,7 @@ public class ReservasController : ControllerBase
     }
 
     [HttpGet]
-    [Authorize]
+    [Authorize(Policy = "GerenteOnly")]
     public ActionResult<IEnumerable<Reserva>> Get()
     {
         var reservas = _uof.ReservaRepository.GetAll();
@@ -30,7 +30,7 @@ public class ReservasController : ControllerBase
     }
 
     [HttpGet("{id:int:min(1)}", Name = "ObterReserva")]
-    [Authorize]
+    [Authorize(Policy = "GerenteOnly")]
     public ActionResult<Reserva> Get(int id)
     {
         var reserva = _uof.ReservaRepository.Get(r => r.ReservaId == id);
@@ -44,7 +44,7 @@ public class ReservasController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize]
+    [Authorize(Policy = "AllRoles")]
     public ActionResult<Reserva> Post(Reserva reserva)
     {
 
@@ -68,7 +68,7 @@ public class ReservasController : ControllerBase
 
     /* Alterar uma reserva */
     [HttpPut("{id:int:min(1)}")]
-    [Authorize]
+    [Authorize(Policy = "FuncionarioOrGerenteOnly")]
     public ActionResult<Reserva> Put([FromBody] Reserva reserva, int id)
     {
         var existeReserva = _uof.ReservaRepository.Get(r => r.ReservaId == id);
@@ -122,7 +122,7 @@ public class ReservasController : ControllerBase
 
     /* Cancelar uma reserva */
     [HttpDelete("{id:int:min(1)}")]
-    [Authorize]
+    [Authorize(Policy = "GerenteOnly")]
     public ActionResult<Reserva> Delete(int id)
     {
         var existeReserva = _uof.ReservaRepository.Get(r => r.ReservaId == id);

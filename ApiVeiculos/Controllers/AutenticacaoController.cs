@@ -46,6 +46,7 @@ public class AutenticacaoController : Controller
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
             };
 
+            /* Adiciona a Claim do tipo de Role */
             foreach (var userRole in userRoles)
             {
                 authClaims.Add(new Claim(ClaimTypes.Role, userRole));
@@ -68,12 +69,14 @@ public class AutenticacaoController : Controller
 
             return Ok(new
             {
+                Status = "200",
+                Message = $"Olá {user.Name}",
                 Token = new JwtSecurityTokenHandler().WriteToken(token),
                 RefreshToken = refreshToken,
                 Expiration = token.ValidTo
             });
         }
-        return Unauthorized();
+        return Unauthorized(new { Status = "401", Message = "Username ou senha incorretos" });
     }
 
     [HttpPost("Cadastro")]
@@ -81,9 +84,9 @@ public class AutenticacaoController : Controller
     {
         var existeUsuario = await _userManager.FindByNameAsync(register.Username!);
 
-        if (existeUsuario?.CPF == register.CPF)
+        if (existeUsuario?.CPF == register.CPF || register.Email == existeUsuario?.Email)
         {
-            return BadRequest("O usuário já está cadastrado");
+            return BadRequest(new { Status = "400", Message = "O usuário já está cadastrado" });
         }
 
         ApplicationUser user = new()
@@ -95,45 +98,46 @@ public class AutenticacaoController : Controller
             Name = register.Nome
         };
 
-        var result = await _userManager.CreateAsync(user, register.Password!);
+        await _userManager.CreateAsync(user, register.Password!);
+        var resultado = await _userManager.AddToRoleAsync(user, "Cliente");
 
-        if (!result.Succeeded)
+        if (!resultado.Succeeded)
         {
             return StatusCode(StatusCodes.Status500InternalServerError,
-                   new { Status = "Error", Message = "Houve you erro na criação de usuário" });
+                   new { Status = "500", Message = "Houve um erro na criação de usuário" });
         }
 
-        return Ok(new { Status = "Success", Message = "Usuário criado com sucesso!" });
+        /*Alterar pra retornar um 201*/
+        return Ok( new { Status = "200", Message = "Usuário criado com sucesso!" });
 
     }
 
     [HttpPost("Perfil")]
-    [Authorize]
+    [Authorize(Policy = "GerenteOnly")]
     public async Task<IActionResult> CreateRole(string roleName)
     {
         var existeRole = await _roleManager.RoleExistsAsync(roleName);
 
         if (existeRole)
         {
-            return BadRequest("Esse perfil já existe");
+            return BadRequest(new { Status = "400", Message = "Perfil já existe" });
         }
 
         var role = await _roleManager.CreateAsync(new IdentityRole(roleName));
 
         if (role.Succeeded)
         {
-            return Ok("Perfil adicionado com sucesso!");
+            return Ok(new { Status = "200", Message = $"Perfil {roleName} adicionado com sucesso!" });
         }else
         {
-            return BadRequest("Houve um erro na criação do perfil");
+            return StatusCode(StatusCodes.Status500InternalServerError, 
+                new { Status = "500", Message = $"Houve um erro na criação do perfil {roleName}" });
         }
     }
 
     [HttpPost("Perfil/Adiciona/Usuario")]
-    [Authorize]
-
-    /*Adicionar as claims na rota*/
-    public async Task<IActionResult> AddRole(string email, string roleName)
+    [Authorize(Policy = "GerenteOnly")]
+    public async Task<IActionResult> AddUserToRole(string email, string roleName)
     {
         var user = await _userManager.FindByEmailAsync(email);
 
@@ -141,16 +145,18 @@ public class AutenticacaoController : Controller
         {
             var resultado = await _userManager.AddToRoleAsync(user, roleName);
 
-            if (resultado.Succeeded) {
-                return Ok(new { Status = "200", Message = $"O usuário {user.Email} adicionado ao perfil {roleName}" });
+            if (resultado.Succeeded) 
+            {
+                return Ok(new { Status = "200", Message = $"O usuário {user.Id} adicionado ao perfil {roleName}" });
             }
             else
             {
-                return Ok(new { Status = "200", Message = $"O usuário {user.Email} adicionado ao perfil {roleName}" });
+                return StatusCode(StatusCodes.Status500InternalServerError, 
+                    new { Status = "500", Message = $"Houve um erro para adicionar o usuário {user.Id} ao perfil {roleName}" });
             }
         }
 
-        return BadRequest("O usuário não foi encontrado");
+        return BadRequest(new { Status = "400", Message = "O usuário não foi encontrado" });
     }
 
 }

@@ -50,9 +50,9 @@ builder.Services.AddSwaggerGen(c =>
 
 builder.Services.AddAuthorization(options =>
 {
-    options.AddPolicy("Gerente", policy => policy.RequireRole("Gerente").RequireClaim("id", "Pedro"));
-    options.AddPolicy("Funcionario", policy => policy.RequireRole("Funcionario"));
-    options.AddPolicy("Cliente", policy => policy.RequireRole("Cliente"));
+    options.AddPolicy("GerenteOnly", policy => policy.RequireRole("Gerente").RequireAssertion(context => context.User.HasClaim(claim => claim.Value == "Gerente")));
+    options.AddPolicy("FuncionarioOrGerenteOnly", policy => policy.RequireAssertion(context => context.User.HasClaim(claim => claim.Value == "Funcionario" || claim.Value == "Gerente")));
+    options.AddPolicy("AllRoles", policy => policy.RequireAssertion(context => context.User.HasClaim(claim => claim.Value == "Funcionario" || claim.Value == "Gerente" || claim.Value == "Cliente")));
 });
 
 builder.Services.AddScoped<ITokenService, TokenService>();

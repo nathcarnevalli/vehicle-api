@@ -19,7 +19,7 @@ public class VeiculosController : ControllerBase
     }
 
     [HttpGet]
-    [Authorize]
+    [Authorize(Policy = "GerenteOnly")]
     public ActionResult<IEnumerable<Veiculo>> Get()
     {
         var veiculos = _uof.VeiculoRepository.GetAll();
@@ -33,7 +33,7 @@ public class VeiculosController : ControllerBase
     }
 
     [HttpGet("Disponiveis")]
-    [Authorize]
+    [Authorize(Policy = "AllRoles")]
     public ActionResult<IEnumerable<Veiculo>> GetVeiculosDisponiveis(DateTime dataInicio, DateTime dataFim)
     {
         if (dataInicio >= dataFim)
@@ -52,7 +52,7 @@ public class VeiculosController : ControllerBase
     }
 
     [HttpGet("{id:int:min(1)}/Reservas")]
-    [Authorize]
+    [Authorize(Policy = "GerenteOnly")]
     public ActionResult<IEnumerable<Reserva>> GetReservas(int id)
     {
         var reservas = _uof.ReservaRepository.GetReservasVeiculo(id);
@@ -66,6 +66,7 @@ public class VeiculosController : ControllerBase
     }
 
     [HttpGet("{id:int:min(1)}", Name = "ObterVeiculo")]
+    [Authorize(Policy = "GerenteOnly")]
     public ActionResult<Veiculo> Get(int id)
     {
         var veiculo = _uof.VeiculoRepository.Get(v => v.VeiculoId == id);
@@ -79,6 +80,7 @@ public class VeiculosController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Policy = "FuncionarioOrGerenteOnly")]
     public ActionResult<Veiculo> Post(Veiculo veiculo)
     {
         var existeVeiculo = _uof.VeiculoRepository.Get(v => v.Placa == veiculo.Placa);
@@ -95,6 +97,7 @@ public class VeiculosController : ControllerBase
     }
 
     [HttpPut("{id:int:min(1)}")]
+    [Authorize(Policy = "GerenteOnly")]
     public ActionResult<Veiculo> Put(Veiculo veiculo, int id) 
     {
         var existeVeiculo = _uof.VeiculoRepository.Get(v => v.VeiculoId == id);
@@ -124,7 +127,8 @@ public class VeiculosController : ControllerBase
         return Ok(veiculo);
     }
 
-    [HttpDelete("{id:int:min(1)}")] 
+    [HttpDelete("{id:int:min(1)}")]
+    [Authorize(Policy = "GerenteOnly")]
     public ActionResult<Veiculo> Delete(int id)
     {
         var existeVeiculo = _uof.VeiculoRepository.Get(v => v.VeiculoId == id);
