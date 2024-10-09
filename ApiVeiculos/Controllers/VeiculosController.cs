@@ -1,4 +1,5 @@
 ﻿using ApiVeiculos.Models;
+using ApiVeiculos.Pagination;
 using ApiVeiculos.Repositories;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -19,9 +20,9 @@ public class VeiculosController : ControllerBase
 
     [HttpGet]
     [Authorize(Policy = "GerenteOnly")]
-    public async Task<ActionResult<IEnumerable<Veiculo>>> Get()
+    public async Task<ActionResult<IEnumerable<Veiculo>>> Get([FromQuery]QueryStringParameters parameters)
     {
-        var veiculos = await _uof.VeiculoRepository.GetAllAsync();
+        var veiculos = await _uof.VeiculoRepository.GetVeiculosAsync(parameters);
 
         if(!veiculos.Any())
         {
@@ -33,14 +34,14 @@ public class VeiculosController : ControllerBase
 
     [HttpGet("Disponiveis")]
     [Authorize(Policy = "AllRoles")]
-    public async Task<ActionResult<IEnumerable<Veiculo>>> GetVeiculosDisponiveis(DateTime dataInicio, DateTime dataFim)
+    public async Task<ActionResult<IEnumerable<Veiculo>>> GetVeiculosDisponiveis(DateTime dataInicio, DateTime dataFim, [FromQuery]QueryStringParameters parameters)
     {
         if (dataInicio >= dataFim)
         {
             return BadRequest(new { Status = "400", Message = "Datas inválidas" });
         }
 
-        var veiculos = await _uof.VeiculoRepository.GetVeiculosDisponiveisAsync(dataInicio, dataFim);
+        var veiculos = await _uof.VeiculoRepository.GetVeiculosDisponiveisAsync(dataInicio, dataFim, parameters);
 
         if (!veiculos.Any())
         {
@@ -52,9 +53,9 @@ public class VeiculosController : ControllerBase
 
     [HttpGet("{id:int:min(1)}/Reservas")]
     [Authorize(Policy = "GerenteOnly")]
-    public async Task<ActionResult<IEnumerable<Reserva>>> GetReservas(int id)
+    public async Task<ActionResult<IEnumerable<Reserva>>> GetReservas(int id, [FromQuery]QueryStringParameters paramters)
     {
-        var reservas = await _uof.ReservaRepository.GetReservasVeiculoAsync(id)!;
+        var reservas = await _uof.ReservaRepository.GetReservasVeiculoAsync(id, paramters)!;
 
         if (!reservas.Any())
         {
@@ -108,7 +109,7 @@ public class VeiculosController : ControllerBase
 
         if (veiculo.Estado.Equals(Veiculo.EstadoVeiculo.Manutencao))
         {
-            var reservas = await _uof.ReservaRepository.GetReservasVeiculoAsync(id)!;
+            var reservas = await _uof.ReservaRepository.GetAllReservasVeiculoAsync(id)!;
 
             foreach (var reserva in reservas!)
             {
@@ -140,7 +141,7 @@ public class VeiculosController : ControllerBase
             return BadRequest(new { Status = "404", Message = $"Veículo {existeVeiculo.Modelo} já foi deletado"});
         }
 
-        var reservas = await _uof.ReservaRepository.GetReservasVeiculoAsync(id)!;
+        var reservas = await _uof.ReservaRepository.GetAllReservasVeiculoAsync(id)!;
 
         foreach (var reserva in reservas!)
         {

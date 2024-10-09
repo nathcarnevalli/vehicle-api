@@ -1,4 +1,5 @@
 ﻿using ApiVeiculos.Models;
+using ApiVeiculos.Pagination;
 using ApiVeiculos.Repositories;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -17,9 +18,9 @@ public class ReservasController : ControllerBase
 
     [HttpGet]
     [Authorize(Policy = "GerenteOnly")]
-    public async Task<ActionResult<IEnumerable<Reserva>>> Get()
+    public async Task<ActionResult<IEnumerable<Reserva>>> Get([FromQuery] QueryStringParameters parameters)
     {
-        var reservas = await _uof.ReservaRepository.GetAllAsync();
+        var reservas = await _uof.ReservaRepository.GetReservasAsync(parameters);
 
         if (!reservas.Any())
         {
@@ -43,6 +44,7 @@ public class ReservasController : ControllerBase
         return Ok(new { Status = "200", Data = reserva });
     }
 
+    /* Criar uma reserva */
     [HttpPost]
     [Authorize(Policy = "AllRoles")]
     public async Task<ActionResult<Reserva>> Post(Reserva reserva)
@@ -53,8 +55,7 @@ public class ReservasController : ControllerBase
             return BadRequest(new { Status = "400", Message = "Datas inválidas" });
         }
 
-        var veiculosDisponiveis = await _uof.VeiculoRepository.GetVeiculosDisponiveisAsync(reserva.DataInicio, reserva.DataFim);
-        var veiculoDisponivel = veiculosDisponiveis.FirstOrDefault(v => v.VeiculoId == reserva.VeiculoId);
+        var veiculoDisponivel = await _uof.VeiculoRepository.GetVeiculoDisponivelByIdAsync(reserva.DataInicio, reserva.DataFim, reserva.VeiculoId);
 
         if (veiculoDisponivel is null)
         {
@@ -92,9 +93,7 @@ public class ReservasController : ControllerBase
                 return BadRequest(new { Status = "400", Message = "Datas inválidas" });
             }
 
-            var veiculosDisponiveis = await _uof.VeiculoRepository.GetVeiculosDisponiveisAsync(reserva.DataInicio, reserva.DataFim);
-
-            var veiculoDisponivel = veiculosDisponiveis.FirstOrDefault(v => v.VeiculoId == reserva.VeiculoId);
+            var veiculoDisponivel = await _uof.VeiculoRepository.GetVeiculoDisponivelByIdAsync(reserva.DataInicio, reserva.DataFim, reserva.VeiculoId);
 
             if (veiculoDisponivel is null)
             {
@@ -103,7 +102,7 @@ public class ReservasController : ControllerBase
         }
         else
         {
-            var reservas = await _uof.ReservaRepository.GetReservasVeiculoAsync(id)!;
+            var reservas = await _uof.ReservaRepository.GetAllReservasVeiculoAsync(id)!;
             var reservaEmAndamento = reservas.FirstOrDefault(r =>
     r.Estado == Reserva.EstadoReserva.Confirmado || r.Estado == Reserva.EstadoReserva.Provisorio);
 

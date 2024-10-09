@@ -21,8 +21,7 @@ public static class ApiExceptionMiddlewareExtensions
                     await context.Response.WriteAsync(new ErrorDetails()
                     {
                         StatusCode = context.Response.StatusCode,
-                        Message = contextFeature.Error.Message,
-                        Trace = contextFeature.Error.StackTrace
+                        Message = contextFeature.Error.Message
                     }.ToString());
                 }
             });

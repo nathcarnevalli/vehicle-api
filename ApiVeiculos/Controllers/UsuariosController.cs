@@ -1,9 +1,12 @@
 ﻿using ApiVeiculos.DTOs;
 using ApiVeiculos.Models;
+using ApiVeiculos.Pagination;
+using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using X.PagedList;
 
 namespace ApiVeiculos.Controllers;
 
@@ -12,16 +15,24 @@ namespace ApiVeiculos.Controllers;
 public class UsuariosController : Controller
 {
     private readonly UserManager<ApplicationUser> _userManager;
-    public UsuariosController(UserManager<ApplicationUser> userManager) 
+    private readonly IMapper _mapper;
+    public UsuariosController(UserManager<ApplicationUser> userManager, IMapper mapper) 
     { 
         _userManager = userManager;
+        _mapper = mapper;
     }
 
     [HttpGet]
     //[Authorize(Policy = "FuncionarioOrGerenteOnly")]
-    public async Task<IActionResult> GetAll()
+    public async Task<IActionResult> GetAll([FromQuery]QueryStringParameters parameters)
     {
-        var usuarios = await _userManager.Users.ToListAsync();
+        var usuariosNoMap = await _userManager.Users.ToListAsync();
+
+        var usuariosMap = _mapper.Map<IEnumerable<UserModel>>(usuariosNoMap);
+
+        var usuariosOrdenados = usuariosMap.OrderBy(u => u.Id).AsQueryable();
+
+        var usuarios = usuariosOrdenados.ToPagedList(parameters.PageNumber, parameters.PageSize);
 
         if (!usuarios.Any())
         {
@@ -45,7 +56,7 @@ public class UsuariosController : Controller
         return Ok(new { Status = "200", Data = usuario });
     }
 
-    /* Atualizar um usuário */
+    /* Criar um usuário */
     [HttpPost]
     public async Task<IActionResult> Post(RegisterModel register)
     {
@@ -80,7 +91,7 @@ public class UsuariosController : Controller
 
     /* Alterar um usuário */
     [HttpPut("{id:alpha}")]
-    //[Authorize(Policy = "GerenteOnly")]
+    //[Authorize(Policy = "GerenteOnly")
     public async Task<IActionResult> Put(string id, UserModel usuario)
     {
         var existeUsuario = await _userManager.FindByIdAsync(id);
@@ -90,15 +101,13 @@ public class UsuariosController : Controller
             return NotFound(new { Status = "404", Message = "Usuário não encontrado" });
         }
 
-        existeUsuario.Name = usuario.Name;
-        await _userManager.SetUserNameAsync(existeUsuario, usuario.Username);
-        await _userManager.ChangeEmailAsync(existeUsuario, existeUsuario.Email!, usuario.Email!);
-        await _userManager.ChangePasswordAsync(existeUsuario, existeUsuario.PasswordHash!, usuario.Password!);
+        var usuarioMap = _mapper.Map<ApplicationUser>(usuario);
 
+        var usuarioAtualizado = await _userManager.UpdateAsync(usuarioMap);
 
-        var usuarioAtualizado = await _userManager.UpdateAsync(existeUsuario);
+        var usuarioAtualizadoMap = _mapper.Map<UserModel>(usuarioAtualizado);
 
-        return Ok(new { Status = "200", Data = usuarioAtualizado, Message = "Informações atualizadas com sucesso" });
+        return Ok(new { Status = "200", Data = usuarioAtualizadoMap, Message = "Informações atualizadas com sucesso" });
     }
 
     /* Deletar um usuário */

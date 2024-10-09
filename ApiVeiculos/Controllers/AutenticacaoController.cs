@@ -107,7 +107,7 @@ public class AutenticacaoController : Controller
         }
     }
 
-    [HttpPost("Perfil/Adiciona/Usuario")]
+    [HttpPost("Perfil/AdicionaUsuario")]
     [Authorize(Policy = "GerenteOnly")]
     public async Task<IActionResult> AddUserToRole(string email, string roleName)
     {

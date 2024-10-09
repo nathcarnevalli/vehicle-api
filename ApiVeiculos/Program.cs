@@ -1,4 +1,5 @@
 using ApiVeiculos.Context;
+using ApiVeiculos.DTOs.Mappings;
 using ApiVeiculos.Extensions;
 using ApiVeiculos.Models;
 using ApiVeiculos.Repositories;
@@ -93,6 +94,8 @@ builder.Services.AddAuthentication(options =>
                            Encoding.UTF8.GetBytes(secretKey))
     };
 });
+
+builder.Services.AddAutoMapper(typeof(UserMapping));
 
 var app = builder.Build();
 
