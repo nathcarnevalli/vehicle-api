@@ -56,6 +56,7 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("AllRoles", policy => policy.RequireAssertion(context => context.User.HasClaim(claim => claim.Value == "Funcionario" || claim.Value == "Gerente" || claim.Value == "Cliente")));
 });
 
+builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IVeiculoRepository, VeiculoRepository>();
 builder.Services.AddScoped<IReservaRepository, ReservaRepository>();

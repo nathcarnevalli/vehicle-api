@@ -86,7 +86,7 @@ public class AutenticacaoController : Controller
 
     [HttpPost("Perfil")]
     [Authorize(Policy = "GerenteOnly")]
-    public async Task<IActionResult> CreateRole(string roleName)
+    public async Task<IActionResult> CreateRole([FromQuery] string roleName)
     {
         var existeRole = await _roleManager.RoleExistsAsync(roleName);
 
@@ -107,9 +107,9 @@ public class AutenticacaoController : Controller
         }
     }
 
-    [HttpPost("Perfil/AdicionaUsuario")]
+    [HttpPost("Perfil/AdicionarUsuario")]
     [Authorize(Policy = "GerenteOnly")]
-    public async Task<IActionResult> AddUserToRole(string email, string roleName)
+    public async Task<IActionResult> AddUserToRole([FromQuery]string email, [FromQuery]string roleName)
     {
         var user = await _userManager.FindByEmailAsync(email);
 

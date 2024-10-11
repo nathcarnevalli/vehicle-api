@@ -20,20 +20,20 @@ public class ReservaRepository : Repository<Reserva>, IReservaRepository
 
     public async Task<IPagedList<Reserva>>? GetReservasVeiculoAsync(int id, QueryStringParameters parameters)
     {
-        var veiculos = await _context.Veiculos
-            .Include(v => v.Reservas).AsNoTracking().FirstOrDefaultAsync(v => v.VeiculoId == id);
+        var reservas = await GetAllAsync();
 
-        var veiculoReservas = veiculos.Reservas.OrderBy(r => r.ReservaId).AsQueryable();
+        var reservasVeiculo = reservas.Where(r => r.VeiculoId == id).OrderBy(r => r.ReservaId).AsQueryable();
 
-        return veiculoReservas.ToPagedList(parameters.PageNumber, parameters.PageSize);
+        return reservasVeiculo.ToPagedList(parameters.PageNumber, parameters.PageSize);
     }
 
     public async Task<IEnumerable<Reserva>>? GetAllReservasVeiculoAsync(int id)
     {
-        var veiculos = await _context.Veiculos
-            .Include(v => v.Reservas).AsNoTracking().FirstOrDefaultAsync(v => v.VeiculoId == id);
+        var reservas = await GetAllAsync();
 
-        return veiculos.Reservas.ToList();
+        var reservasVeiculo = reservas.Where(r => r.VeiculoId == id).OrderBy(r => r.ReservaId);
+
+        return reservasVeiculo;
     }
 }
 

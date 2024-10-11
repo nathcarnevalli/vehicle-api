@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using static ApiVeiculos.Models.ApplicationUser;
 
 namespace ApiVeiculos.DTOs;
 
@@ -22,9 +23,4 @@ public class UserModel
     public string? CPF { get; set; }
 
     public EstadoUsuario Estado { get; set; }
-    public enum EstadoUsuario
-    {
-        Ativo,
-        Inativo
-    }
 }

@@ -3,6 +3,8 @@ using ApiVeiculos.Pagination;
 using ApiVeiculos.Repositories;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using static ApiVeiculos.Models.Reserva;
+using static ApiVeiculos.Models.Veiculo;
 
 namespace ApiVeiculos.Controllers;
 
@@ -83,11 +85,16 @@ public class VeiculosController : ControllerBase
     [Authorize(Policy = "FuncionarioOrGerenteOnly")]
     public async Task<ActionResult<Veiculo>> Post(Veiculo veiculo)
     {
+        if (!_uof.VeiculoRepository.ValidaPlaca(veiculo.Placa!))
+        {
+            return BadRequest(new { Status = "400", Message = "Placa inválida"});
+        }
+
         var existeVeiculo = await _uof.VeiculoRepository.GetAsync(v => v.Placa == veiculo.Placa);
 
         if(existeVeiculo is not null)
         {
-            return Conflict($"Veículo {veiculo.Modelo} de placa {veiculo.Placa} já existe"); 
+            return Conflict(new { Status = "409", Message = $"Veículo de placa {veiculo.Placa} já existe"}); 
         }
 
         var veiculoCriado = _uof.VeiculoRepository.Create(veiculo);
@@ -100,6 +107,17 @@ public class VeiculosController : ControllerBase
     [Authorize(Policy = "GerenteOnly")]
     public async Task<ActionResult<Veiculo>> Put(Veiculo veiculo, int id) 
     {
+        if (id != veiculo.VeiculoId)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError,
+                   new { Status = "500", Message = "Houve um erro na alteração do veículo" });
+        }
+
+        if (!_uof.VeiculoRepository.ValidaPlaca(veiculo.Placa!))
+        {
+            return BadRequest(new { Status = "400", Message = "Placa inválida" });
+        }
+
         var existeVeiculo = await _uof.VeiculoRepository.GetAsync(v => v.VeiculoId == id);
 
         if(existeVeiculo is null)
@@ -107,15 +125,25 @@ public class VeiculosController : ControllerBase
             return NotFound(new { Status = "404", Message = $"Veículo {veiculo.Modelo} não encontrado" });
         }
 
-        if (veiculo.Estado.Equals(Veiculo.EstadoVeiculo.Manutencao))
+        if(veiculo.Placa != existeVeiculo.Placa)
+        {
+            var existePlaca = await _uof.VeiculoRepository.GetAsync(v => v.Placa == veiculo.Placa);
+
+            if(existePlaca is not null)
+            {
+                return Conflict(new { Status = "409", Message = $"Veículo de placa {veiculo.Placa} já existe"});
+            }
+        }
+
+        if (veiculo.Estado.Equals(EstadoVeiculo.Manutencao))
         {
             var reservas = await _uof.ReservaRepository.GetAllReservasVeiculoAsync(id)!;
 
             foreach (var reserva in reservas!)
             {
-                if (reserva.Estado.Equals(Reserva.EstadoReserva.Provisorio) || reserva.Estado.Equals(Reserva.EstadoReserva.Confirmado))
+                if (reserva.Estado.Equals(EstadoReserva.Provisorio) || reserva.Estado.Equals(EstadoReserva.Confirmado))
                 {
-                    reserva.Estado = Reserva.EstadoReserva.Cancelado;
+                    reserva.Estado = EstadoReserva.Cancelado;
                     _uof.ReservaRepository.Delete(reserva);
                 }
             }
@@ -124,7 +152,7 @@ public class VeiculosController : ControllerBase
         var veiculoAtualizado = _uof.VeiculoRepository.Update(veiculo);
         await _uof.CommitAsync();
 
-        return Ok(new { Status = "200", Data = veiculo, Message = "Veículo atualizado com sucesso" });
+        return Ok(new { Status = "200", Data = veiculo, Message = $"Veículo {veiculo.Modelo} atualizado com sucesso" });
     }
 
     [HttpDelete("{id:int:min(1)}")]
@@ -136,23 +164,23 @@ public class VeiculosController : ControllerBase
         if(existeVeiculo is null)
         {
             return NotFound(new { Status = "404", Message = "Veículo não encontrado" });
-        }else if (existeVeiculo.Estado.Equals(Reserva.EstadoReserva.Cancelado))
+        }else if (existeVeiculo.Estado.Equals(EstadoReserva.Cancelado))
         {
-            return BadRequest(new { Status = "404", Message = $"Veículo {existeVeiculo.Modelo} já foi deletado"});
+            return BadRequest(new { Status = "400", Message = $"Veículo {existeVeiculo.Modelo} já foi deletado"});
         }
 
         var reservas = await _uof.ReservaRepository.GetAllReservasVeiculoAsync(id)!;
 
         foreach (var reserva in reservas!)
         {
-            if (reserva.Estado.Equals(Reserva.EstadoReserva.Provisorio) || reserva.Estado.Equals(Reserva.EstadoReserva.Confirmado))
+            if (reserva.Estado.Equals(EstadoReserva.Provisorio) || reserva.Estado.Equals(EstadoReserva.Confirmado))
             {
-                reserva.Estado = Reserva.EstadoReserva.Cancelado;
+                reserva.Estado = EstadoReserva.Cancelado;
                 _uof.ReservaRepository.Delete(reserva);
             }
         }
 
-        existeVeiculo.Estado = (Veiculo.EstadoVeiculo) 2; 
+        existeVeiculo.Estado = EstadoVeiculo.Indisponivel; 
 
         var veiculoDeletado = _uof.VeiculoRepository.Delete(existeVeiculo);
         await _uof.CommitAsync();

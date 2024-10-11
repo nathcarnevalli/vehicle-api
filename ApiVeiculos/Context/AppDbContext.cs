@@ -9,7 +9,7 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
     { }
     public DbSet<Veiculo> Veiculos { get; set; }
-    public DbSet<Reserva> Produtos { get; set; }
+    public DbSet<Reserva> Reservas { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

@@ -19,7 +19,8 @@ public class Veiculo
     [StringLength(80)]
     public string? Modelo { get; set; }
     [Required(ErrorMessage = "Informe a placa do veículo")]
-    [StringLength(7)]
+    [MinLength(7)]
+    [MaxLength(7)]
     public string? Placa { get; set; }
     [Required(ErrorMessage = "Informe a marca do veículo")]
     [StringLength(80)]

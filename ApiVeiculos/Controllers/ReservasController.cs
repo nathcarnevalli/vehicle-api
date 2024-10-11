@@ -49,17 +49,21 @@ public class ReservasController : ControllerBase
     [Authorize(Policy = "AllRoles")]
     public async Task<ActionResult<Reserva>> Post(Reserva reserva)
     {
-
         if (reserva.DataInicio >= reserva.DataFim ||  reserva.DataInicio <= DateTime.Now)
         {
             return BadRequest(new { Status = "400", Message = "Datas inválidas" });
+        }
+
+        if (reserva.VeiculoId < 1)
+        {
+            return BadRequest(new { Status = "400", Message = "Veículo inválido" });
         }
 
         var veiculoDisponivel = await _uof.VeiculoRepository.GetVeiculoDisponivelByIdAsync(reserva.DataInicio, reserva.DataFim, reserva.VeiculoId);
 
         if (veiculoDisponivel is null)
         {
-            return Conflict(new { Status = "409", Message = "Veiculo não se encontra disponível nesse intervalo" });
+            return Conflict(new { Status = "409", Message = "O veículo não se encontra disponível nesse intervalo" });
         }
 
         var reservaCriada = _uof.ReservaRepository.Create(reserva);
@@ -73,11 +77,23 @@ public class ReservasController : ControllerBase
     [Authorize(Policy = "FuncionarioOrGerenteOnly")]
     public async Task<ActionResult<Reserva>> Put([FromBody] Reserva reserva, int id)
     {
+
+        if (id != reserva.ReservaId)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError,
+                   new { Status = "500", Message = "Houve um erro na alteração da reserva" });
+        }
+
         var existeReserva = await _uof.ReservaRepository.GetAsync(r => r.ReservaId == id);
 
         if (existeReserva is null)
         {
             return NotFound( new { Status = "404", Message = "Reserva não encontrada"});
+        }
+
+        if(reserva.VeiculoId < 1)
+        {
+            return BadRequest( new { Status = "400", Message = "Veículo inválido"});
         }
 
         if (reserva.DataInicio >= reserva.DataFim)
@@ -97,20 +113,8 @@ public class ReservasController : ControllerBase
 
             if (veiculoDisponivel is null)
             {
-                return Conflict(new {Status = "409", Message = "Veículo não se encontra disponível nesse intervalo" });
+                return Conflict(new {Status = "409", Message = "O veículo não se encontra disponível nesse intervalo" });
             }
-        }
-        else
-        {
-            var reservas = await _uof.ReservaRepository.GetAllReservasVeiculoAsync(id)!;
-            var reservaEmAndamento = reservas.FirstOrDefault(r =>
-    r.Estado == Reserva.EstadoReserva.Confirmado || r.Estado == Reserva.EstadoReserva.Provisorio);
-
-            if(reservaEmAndamento is not null)
-            {
-                return Conflict(new {Status = "409", Message = "Veículo já possui uma reserva em andamento" });
-            }
-
         }
 
         var reservaAtualizada = _uof.ReservaRepository.Update(reserva); 

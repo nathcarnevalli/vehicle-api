@@ -2,6 +2,7 @@
 using ApiVeiculos.Models;
 using ApiVeiculos.Pagination;
 using Microsoft.EntityFrameworkCore;
+using System.Text.RegularExpressions;
 using X.PagedList;
 using static ApiVeiculos.Models.Reserva;
 using static ApiVeiculos.Models.Veiculo;
@@ -42,6 +43,12 @@ public class VeiculoRepository : Repository<Veiculo>, IVeiculoRepository
             .FirstOrDefaultAsync(v => v.VeiculoId == id);
 
         return veiculo!;
+    }
+
+    public bool ValidaPlaca(string placa)
+    {
+        var regexPlaca = new Regex("^[A-Z]{3}[0-9][A-Z0-9][0-9]{2}$");
+        return regexPlaca.IsMatch(placa);
     }
 }
 

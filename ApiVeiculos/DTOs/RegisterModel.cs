@@ -18,5 +18,6 @@ public class RegisterModel
     public string? Nome { get; set; }
 
     [Required(ErrorMessage = "CPF é obrigatório")]
+    [StringLength(14)]
     public string? CPF { get; set; }
 }
