@@ -137,9 +137,7 @@ public class UsuariosController : Controller
 
         await _userManager.UpdateAsync(usuarioAtualizado);
 
-        var usuarioMap = _mapper.Map<ApplicationUser>(usuario);
-
-        return Ok(new { Status = "200", Data = usuarioMap, Message = "Informações atualizadas com sucesso" });
+        return Ok(new { Status = "200", Data = usuario, Message = "Informações atualizadas com sucesso" });
     }
 
     /* Deletar um usuário */

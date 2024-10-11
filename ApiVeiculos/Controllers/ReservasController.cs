@@ -93,7 +93,7 @@ public class ReservasController : ControllerBase
     public async Task<ActionResult<Reserva>> Put(ReservaModel reserva, int id)
     {
         var userIdClaim = HttpContext.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
-        if (id != reserva.ReservaId || userIdClaim?.ToString() != reserva.UserId)
+        if (id != reserva.ReservaId || userIdClaim?.Value != reserva.UserId)
         {
             return StatusCode(StatusCodes.Status500InternalServerError,
                    new { Status = "500", Message = "Houve um erro na alteração da reserva" });

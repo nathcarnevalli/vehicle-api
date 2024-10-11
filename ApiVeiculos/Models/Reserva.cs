@@ -20,9 +20,12 @@ public class Reserva
         Confirmado,
         Cancelado
     }
+    [Required(ErrorMessage = "Informe um veículo válido")]
     public int VeiculoId { get; set; }
+
     [JsonIgnore]
     public Veiculo? Veiculo { get; set; }
+
     [ForeignKey("ApplicationUser")]
     public string UserId { get; set; }
     [JsonIgnore]
