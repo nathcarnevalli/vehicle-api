@@ -1,8 +1,11 @@
-﻿using ApiVeiculos.Models;
+﻿using ApiVeiculos.DTOs;
+using ApiVeiculos.Models;
 using ApiVeiculos.Pagination;
 using ApiVeiculos.Repositories;
+using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 namespace ApiVeiculos.Controllers;
 
 [ApiController]
@@ -10,10 +13,12 @@ namespace ApiVeiculos.Controllers;
 public class ReservasController : ControllerBase
 {
     private readonly IUnitOfWork _uof;
+    private readonly IMapper _mapper;
 
-    public ReservasController(IUnitOfWork uof)
+    public ReservasController(IUnitOfWork uof, IMapper mapper)
     {
         _uof = uof;
+        _mapper = mapper;
     }
 
     [HttpGet]
@@ -47,9 +52,9 @@ public class ReservasController : ControllerBase
     /* Criar uma reserva */
     [HttpPost]
     [Authorize(Policy = "AllRoles")]
-    public async Task<ActionResult<Reserva>> Post(Reserva reserva)
+    public async Task<ActionResult<Reserva>> Post(ReservaModel reserva)
     {
-        if (reserva.DataInicio >= reserva.DataFim ||  reserva.DataInicio <= DateTime.Now)
+        if (reserva.DataInicio >= reserva.DataFim || reserva.DataInicio <= DateTime.Now)
         {
             return BadRequest(new { Status = "400", Message = "Datas inválidas" });
         }
@@ -66,7 +71,17 @@ public class ReservasController : ControllerBase
             return Conflict(new { Status = "409", Message = "O veículo não se encontra disponível nesse intervalo" });
         }
 
-        var reservaCriada = _uof.ReservaRepository.Create(reserva);
+        var userIdClaim = HttpContext.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
+        if (userIdClaim == null)
+        {
+            return Unauthorized(new { Status = "401", Message = "Usuário não autenticado" });
+        }
+
+        reserva.UserId = userIdClaim.Value;
+
+        var reservaMap = _mapper.Map<Reserva>(reserva);
+
+        var reservaCriada = _uof.ReservaRepository.Create(reservaMap);
         await _uof.CommitAsync();
 
         return new CreatedAtRouteResult("ObterReserva", new { Status = "201", Data = reservaCriada, Message = "Reserva criada com sucesso" });
@@ -75,10 +90,10 @@ public class ReservasController : ControllerBase
     /* Alterar uma reserva */
     [HttpPut("{id:int:min(1)}")]
     [Authorize(Policy = "FuncionarioOrGerenteOnly")]
-    public async Task<ActionResult<Reserva>> Put([FromBody] Reserva reserva, int id)
+    public async Task<ActionResult<Reserva>> Put(ReservaModel reserva, int id)
     {
-
-        if (id != reserva.ReservaId)
+        var userIdClaim = HttpContext.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
+        if (id != reserva.ReservaId || userIdClaim?.ToString() != reserva.UserId)
         {
             return StatusCode(StatusCodes.Status500InternalServerError,
                    new { Status = "500", Message = "Houve um erro na alteração da reserva" });
@@ -117,7 +132,9 @@ public class ReservasController : ControllerBase
             }
         }
 
-        var reservaAtualizada = _uof.ReservaRepository.Update(reserva); 
+        var reservaMap = _mapper.Map<Reserva>(reserva);
+
+        var reservaAtualizada = _uof.ReservaRepository.Update(reservaMap); 
         await _uof.CommitAsync();
 
         return Ok(new { Status = "200", Data = reservaAtualizada, Message = "Reserva atualizada com sucesso"});

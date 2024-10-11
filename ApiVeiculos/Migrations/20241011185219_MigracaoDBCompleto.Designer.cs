@@ -12,20 +12,20 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ApiVeiculos.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20241008173638_AdicionaEstadoUsuario")]
-    partial class AdicionaEstadoUsuario
+    [Migration("20241011185219_MigracaoDBCompleto")]
+    partial class MigracaoDBCompleto
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.8")
+                .HasAnnotation("ProductVersion", "8.0.10")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
 
-            modelBuilder.Entity("ApiVeiculo.Models.ApplicationUser", b =>
+            modelBuilder.Entity("ApiVeiculos.Models.ApplicationUser", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("varchar(255)");
@@ -46,6 +46,9 @@ namespace ApiVeiculos.Migrations
 
                     b.Property<bool>("EmailConfirmed")
                         .HasColumnType("tinyint(1)");
+
+                    b.Property<int>("Estado")
+                        .HasColumnType("int");
 
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("tinyint(1)");
@@ -118,10 +121,16 @@ namespace ApiVeiculos.Migrations
                     b.Property<int>("Estado")
                         .HasColumnType("int");
 
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("varchar(255)");
+
                     b.Property<int>("VeiculoId")
                         .HasColumnType("int");
 
                     b.HasKey("ReservaId");
+
+                    b.HasIndex("UserId");
 
                     b.HasIndex("VeiculoId");
 
@@ -298,11 +307,19 @@ namespace ApiVeiculos.Migrations
 
             modelBuilder.Entity("ApiVeiculos.Models.Reserva", b =>
                 {
+                    b.HasOne("ApiVeiculos.Models.ApplicationUser", "ApplicationUser")
+                        .WithMany("Reservas")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("ApiVeiculos.Models.Veiculo", "Veiculo")
                         .WithMany("Reservas")
                         .HasForeignKey("VeiculoId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("ApplicationUser");
 
                     b.Navigation("Veiculo");
                 });
@@ -318,7 +335,7 @@ namespace ApiVeiculos.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
                 {
-                    b.HasOne("ApiVeiculo.Models.ApplicationUser", null)
+                    b.HasOne("ApiVeiculos.Models.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -327,7 +344,7 @@ namespace ApiVeiculos.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
-                    b.HasOne("ApiVeiculo.Models.ApplicationUser", null)
+                    b.HasOne("ApiVeiculos.Models.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -342,7 +359,7 @@ namespace ApiVeiculos.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("ApiVeiculo.Models.ApplicationUser", null)
+                    b.HasOne("ApiVeiculos.Models.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -351,11 +368,16 @@ namespace ApiVeiculos.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
                 {
-                    b.HasOne("ApiVeiculo.Models.ApplicationUser", null)
+                    b.HasOne("ApiVeiculos.Models.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("ApiVeiculos.Models.ApplicationUser", b =>
+                {
+                    b.Navigation("Reservas");
                 });
 
             modelBuilder.Entity("ApiVeiculos.Models.Veiculo", b =>

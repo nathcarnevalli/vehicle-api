@@ -17,4 +17,5 @@ public class ApplicationUser : IdentityUser
         Ativo,
         Inativo
     }
+    public ICollection<Reserva> Reservas { get; set; }
 }

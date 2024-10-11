@@ -23,5 +23,9 @@ public class Reserva
     public int VeiculoId { get; set; }
     [JsonIgnore]
     public Veiculo? Veiculo { get; set; }
+    [ForeignKey("ApplicationUser")]
+    public string UserId { get; set; }
+    [JsonIgnore]
+    public ApplicationUser ApplicationUser { get; set; }
 }
 
