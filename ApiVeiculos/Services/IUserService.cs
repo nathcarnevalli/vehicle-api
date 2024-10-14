@@ -9,5 +9,7 @@ namespace ApiVeiculos.Services
         public Task<bool> VerificaFormsAsync(string email, string cpf, string username);
         public bool VerificaCpf(string cpf);
         public bool VerificaEmail(string email);
+        public bool VerificaPassword(string password);
+
     }
 }

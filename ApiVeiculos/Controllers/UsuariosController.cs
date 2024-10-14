@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Win32;
 using X.PagedList;
 
 namespace ApiVeiculos.Controllers;
@@ -86,9 +87,14 @@ public class UsuariosController : Controller
             Email = register.Email,
             SecurityStamp = Guid.NewGuid().ToString(),
             UserName = register.Username,
-            CPF = register.CPF,
+            CPF = register.CPF?.Replace(".", "").Replace("-", "").Trim(),
             Name = register.Nome
         };
+
+        if (!_userService.VerificaPassword(register.Password!))
+        {
+            return BadRequest(new { Status = "400", Message = "A senha deve começar com letra maiúscula e ter pelo menos um character especial" });
+        }
 
         await _userManager.CreateAsync(user, register.Password!);
         var resultado = await _userManager.AddToRoleAsync(user, "Cliente");
@@ -126,6 +132,11 @@ public class UsuariosController : Controller
         if (!_userService.VerificaEmail(usuario.Email!))
         {
             return BadRequest(new { Status = "400", Message = "Email inválido" });
+        }
+
+        if (!_userService.VerificaPassword(usuario.PasswordHash!))
+        {
+            return BadRequest(new { Status = "400", Message = "A senha deve começar com letra maiúscula e ter pelo menos um character especial" });
         }
 
         var (usuarioAtualizado, mensagem) = await _userService.AlteraUsuarioAsync(usuario, existeUsuario);

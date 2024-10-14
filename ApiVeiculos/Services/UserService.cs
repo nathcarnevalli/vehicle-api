@@ -83,7 +83,7 @@ namespace ApiVeiculos.Services
 
         public bool VerificaCpf(string cpf)
         {
-            cpf = cpf.ToString().Replace(".", "").Replace("-", "").Trim();
+            cpf = cpf.Replace(".", "").Replace("-", "").Trim();
 
             if (cpf.Length != 11 || !Regex.IsMatch(cpf, @"^\d{11}$"))
             {
@@ -91,6 +91,12 @@ namespace ApiVeiculos.Services
             }
 
             return true;
+        }
+
+        public bool VerificaPassword(string password)
+        {
+            var regexPassword = new Regex(@"^[A-Z].*[!@#$%^&*(),.?""{}|<>].*$");
+            return regexPassword.IsMatch(password);
         }
 
         public bool VerificaEmail(string email)
