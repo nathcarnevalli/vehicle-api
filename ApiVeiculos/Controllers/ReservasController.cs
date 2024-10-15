@@ -22,7 +22,7 @@ public class ReservasController : ControllerBase
     }
 
     [HttpGet]
-    [Authorize(Policy = "GerenteOnly")]
+    [Authorize(Policy = "FuncionarioOrGerenteOnly")]
     public async Task<ActionResult<IEnumerable<Reserva>>> Get([FromQuery] QueryStringParameters parameters)
     {
         var reservas = await _uof.ReservaRepository.GetReservasAsync(parameters);
@@ -36,7 +36,7 @@ public class ReservasController : ControllerBase
     }
 
     [HttpGet("{id:int:min(1)}", Name = "ObterReserva")]
-    [Authorize(Policy = "GerenteOnly")]
+    [Authorize(Policy = "FuncionarioOrGerenteOnly")]
     public async Task<ActionResult<Reserva>> Get(int id)
     {
         var reserva = await _uof.ReservaRepository.GetAsync(r => r.ReservaId == id);
@@ -92,13 +92,6 @@ public class ReservasController : ControllerBase
     [Authorize(Policy = "FuncionarioOrGerenteOnly")]
     public async Task<ActionResult<Reserva>> Put(ReservaModel reserva, int id)
     {
-        var userIdClaim = HttpContext.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
-        if (id != reserva.ReservaId || userIdClaim?.Value != reserva.UserId)
-        {
-            return StatusCode(StatusCodes.Status500InternalServerError,
-                   new { Status = "500", Message = "Houve um erro na alteração da reserva" });
-        }
-
         var existeReserva = await _uof.ReservaRepository.GetAsync(r => r.ReservaId == id);
 
         if (existeReserva is null)
@@ -106,7 +99,15 @@ public class ReservasController : ControllerBase
             return NotFound( new { Status = "404", Message = "Reserva não encontrada"});
         }
 
-        if(reserva.VeiculoId < 1)
+        if (reserva.Estado == existeReserva.Estado 
+            && reserva.DataInicio == existeReserva.DataInicio 
+            && reserva.DataFim == existeReserva.DataFim 
+            && reserva.VeiculoId == existeReserva.VeiculoId)
+        {
+            return NoContent();
+        }
+
+        if (reserva.VeiculoId < 1)
         {
             return BadRequest( new { Status = "400", Message = "Veículo inválido"});
         }

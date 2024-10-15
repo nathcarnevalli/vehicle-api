@@ -16,6 +16,7 @@ public class Veiculo
     [Key]
     public int VeiculoId { get; set; }
     [Required(ErrorMessage ="Informe o modelo do veículo")]
+    [MinLength(5)]
     [StringLength(80)]
     public string? Modelo { get; set; }
     [Required(ErrorMessage = "Informe a placa do veículo")]
@@ -23,6 +24,7 @@ public class Veiculo
     [MaxLength(7)]
     public string? Placa { get; set; }
     [Required(ErrorMessage = "Informe a marca do veículo")]
+    [MinLength(5)]
     [StringLength(80)]
     public string? Marca { get; set; }
     [Required(ErrorMessage = "Informe o ano do veículo")]

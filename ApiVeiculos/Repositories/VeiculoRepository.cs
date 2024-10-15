@@ -27,7 +27,7 @@ public class VeiculoRepository : Repository<Veiculo>, IVeiculoRepository
         var veiculos = await _context.Veiculos
             .Include(v => v.Reservas)
             .AsNoTracking().Where(v => v.Estado.Equals(EstadoVeiculo.Disponivel) && (!v.Reservas.Any(r =>
-                r.DataInicio <= dataInicio && r.DataFim >= dataFim) || v.Reservas.Count == 0 || v.Reservas.All(r => r.Estado.Equals(EstadoReserva.Cancelado)))).ToListAsync();
+                r.DataInicio < dataFim && r.DataFim > dataInicio) || v.Reservas.Count == 0 || v.Reservas.All(r => r.Estado.Equals(EstadoReserva.Cancelado)))).ToListAsync();
 
         var veiculosOrdenados = veiculos.OrderBy(v => v.VeiculoId).AsQueryable();
 
@@ -38,8 +38,9 @@ public class VeiculoRepository : Repository<Veiculo>, IVeiculoRepository
     {
         var veiculo = await _context.Veiculos
             .Include(v => v.Reservas)
-            .AsNoTracking().Where(v => v.Estado.Equals(EstadoVeiculo.Disponivel) && (!v.Reservas.Any(r =>
-                r.DataInicio <= dataInicio && r.DataFim >= dataFim) || v.Reservas.Count == 0 || v.Reservas.All(r => r.Estado.Equals(EstadoReserva.Cancelado))))
+            .AsNoTracking()
+            .Where(v => v.Estado.Equals(EstadoVeiculo.Disponivel) && (!v.Reservas.Any(r =>
+                r.DataInicio < dataFim && r.DataFim > dataInicio) || v.Reservas.Count == 0 || v.Reservas.All(r => r.Estado.Equals(EstadoReserva.Cancelado))))
             .FirstOrDefaultAsync(v => v.VeiculoId == id);
 
         return veiculo!;

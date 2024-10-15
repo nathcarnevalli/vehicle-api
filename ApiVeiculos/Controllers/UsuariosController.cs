@@ -134,9 +134,12 @@ public class UsuariosController : Controller
             return BadRequest(new { Status = "400", Message = "Email inválido" });
         }
 
-        if (!_userService.VerificaPassword(usuario.PasswordHash!))
+        if (usuario.PasswordHash != existeUsuario.PasswordHash)
         {
-            return BadRequest(new { Status = "400", Message = "A senha deve começar com letra maiúscula e ter pelo menos um character especial" });
+            if (!_userService.VerificaPassword(usuario.PasswordHash!))
+            {
+                return BadRequest(new { Status = "400", Message = "A senha deve começar com letra maiúscula e ter pelo menos um character especial" });
+            }
         }
 
         var (usuarioAtualizado, mensagem) = await _userService.AlteraUsuarioAsync(usuario, existeUsuario);
@@ -144,6 +147,11 @@ public class UsuariosController : Controller
         if (usuarioAtualizado is null)
         {
             return BadRequest(new { Status = "400", Message = mensagem });
+        }
+
+        if (mensagem.Length == 0)
+        {
+            return NoContent();
         }
 
         await _userManager.UpdateAsync(usuarioAtualizado);

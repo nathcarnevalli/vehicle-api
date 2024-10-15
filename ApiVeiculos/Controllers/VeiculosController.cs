@@ -90,6 +90,11 @@ public class VeiculosController : ControllerBase
             return BadRequest(new { Status = "400", Message = "Placa inválida"});
         }
 
+        if((veiculo.Ano?.Length != 4) || Int32.Parse(veiculo.Ano) < 2000)
+        {
+            return BadRequest(new { Status = "400", Message = "Ano inválido"});
+        }
+
         var existeVeiculo = await _uof.VeiculoRepository.GetAsync(v => v.Placa == veiculo.Placa);
 
         if(existeVeiculo is not null)
@@ -123,6 +128,15 @@ public class VeiculosController : ControllerBase
         if(existeVeiculo is null)
         {
             return NotFound(new { Status = "404", Message = $"Veículo {veiculo.Modelo} não encontrado" });
+        }
+
+        if(veiculo.Estado == existeVeiculo.Estado 
+            && veiculo.Marca == existeVeiculo.Marca 
+            && veiculo.Placa == existeVeiculo.Placa 
+            && veiculo.Ano == existeVeiculo.Ano 
+            && veiculo.Modelo == existeVeiculo.Modelo)
+        {
+            return NoContent();
         }
 
         if(veiculo.Placa != existeVeiculo.Placa)

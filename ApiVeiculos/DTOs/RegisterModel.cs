@@ -5,6 +5,7 @@ namespace ApiVeiculos.DTOs;
 public class RegisterModel
 {
     [Required(ErrorMessage = "Username é obrigatório")]
+    [MinLength(5)]
     public string? Username { get; set; }
 
     [EmailAddress]
@@ -12,6 +13,8 @@ public class RegisterModel
     public string? Email { get; set; }
 
     [Required(ErrorMessage = "Password é obrigatória")]
+    [MinLength(5)]
+    [MaxLength(255)]
     public string? Password { get; set; }
 
     [Required(ErrorMessage = "Nome é obrigatório")]
